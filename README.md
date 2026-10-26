@@ -1,4 +1,4 @@
-# Replication Package: Instruction-Fuel Drift, Boundary-Crossing Overhead, and Memory Safety in WebAssembly Sandboxes
+# Instruction-Fuel Drift, Boundary-Crossing Overhead, and Memory Safety in WebAssembly Sandboxes
 
 ## Authors
 - **Devarsh Patel** (`devarsh.patel2024@vitstudent.ac.in`)
