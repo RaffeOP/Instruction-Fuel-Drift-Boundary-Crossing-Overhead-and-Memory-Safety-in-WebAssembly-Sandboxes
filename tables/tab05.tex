@@ -1,0 +1,29 @@
+\begin{table}[t]
+\centering
+\caption{Recycling leak slope (OLS over 1{,}000-lifecycle checkpoints, 95\% CI; last column is the GPD shape $\xi$) and leave-one-cell-out calibration of cost per fuel unit, with static opcode-class counts (CalibWasm) and dynamically executed class counts. Negative change means dispersion increased.}
+\label{tab:rq5}
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrr}
+\toprule
+Analysis & Estimate & $p$ & $\xi$ / change \\
+\midrule
+RQ4 Rust child on\_demand & 9.14 $\pm$ 0.19 B/lc & n/a & n/a \\
+RQ4 Rust child pooled & 8.99 $\pm$ 0.08 B/lc & n/a & n/a \\
+RQ4 control, 0 dirty pages per sandbox & 8.95 B/lc & n/a & n/a \\
+RQ4 control, 4 dirty pages per sandbox & 9.07 B/lc & n/a & n/a \\
+RQ4 on\_demand\_default & 8.214 [8.180, 8.248] B/lc & 7.75e-196 & 0.161 \\
+RQ4 no\_growth\_reservation & 0.190 [0.167, 0.213] B/lc & 2.35e-32 & 0.119 \\
+RQ5 CalibWasm $\lambda=0.01$ & CV 0.983 $\to$ 5.091 & n/a & -418.0\% \\
+RQ5 CalibWasm $\lambda=0.1$ & CV 0.983 $\to$ 1.963 & n/a & -99.8\% \\
+RQ5 CalibWasm $\lambda=1$ & CV 0.983 $\to$ 1.665 & n/a & -69.4\% \\
+RQ5 CalibWasm $\lambda=10$ & CV 0.983 $\to$ 1.625 & n/a & -65.3\% \\
+RQ5 fuel-only baseline & CV 0.983 $\to$ 0.983 & n/a & -0.0\% \\
+RQ5 dynamic classes $\lambda=0.01$ & CV 0.983 $\to$ 1.657 & n/a & -68.7\% \\
+RQ5 dynamic classes $\lambda=0.1$ & CV 0.983 $\to$ 1.439 & n/a & -46.5\% \\
+RQ5 dynamic classes $\lambda=1$ & CV 0.983 $\to$ 1.175 & n/a & -19.6\% \\
+RQ5 dynamic classes $\lambda=10$ & CV 0.983 $\to$ 1.028 & n/a & -4.6\% \\
+RQ5 dynamic classes $\lambda=100$ & CV 0.983 $\to$ 0.987 & n/a & -0.4\% \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

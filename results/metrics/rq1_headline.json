@@ -1,0 +1,58 @@
+{
+  "runtimes": [
+    "v8",
+    "wamr-interp",
+    "wasmedge-aot",
+    "wasmedge-interp",
+    "wasmer-cranelift",
+    "wasmer-cranelift-metered",
+    "wasmer-llvm",
+    "wasmer-llvm-metered",
+    "wasmer-singlepass",
+    "wasmer-singlepass-metered",
+    "wasmtime-cranelift",
+    "wasmtime-winch"
+  ],
+  "runs": 166600,
+  "checksum_agreement": {
+    "cells": 200,
+    "cells_with_disagreement": 0
+  },
+  "a_adv": {
+    "wasmtime-cranelift": {
+      "cells": 200,
+      "a_adv": 40.84266601494634,
+      "psi_cv": 0.9826466984865533
+    },
+    "wasmtime-winch": {
+      "cells": 200,
+      "a_adv": 11.588100749821011,
+      "psi_cv": 0.5633625563042094
+    },
+    "wasmedge-aot": {
+      "cells": 200,
+      "a_adv": 39.40291130072189,
+      "psi_cv": 1.1857052258710201
+    },
+    "wasmedge-interp": {
+      "cells": 200,
+      "a_adv": 1.5570837203140537,
+      "psi_cv": 0.08498099178176369
+    },
+    "wasmer-cranelift-metered": {
+      "cells": 200,
+      "a_adv": 40.2430793247573,
+      "psi_cv": 0.9786648582300785
+    },
+    "wasmer-llvm-metered": {
+      "cells": 200,
+      "a_adv": 22.226198465355708,
+      "psi_cv": 0.988427706208685
+    },
+    "wasmer-singlepass-metered": {
+      "cells": 200,
+      "a_adv": 55.7756145945002,
+      "psi_cv": 0.9734232052910116
+    }
+  }
+}

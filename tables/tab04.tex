@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\caption{Affine fits $T(s)=\alpha+\beta s$ with OLS 95\% half-widths. Host rows: per-call latency of the Wasmtime host-function boundary and the native copy-and-validate baseline, 64\,B to 16\,MiB. WASI rows: per-write cost of a stdout write to \texttt{/dev/null} (instantiation subtracted), 64\,B to 16\,MiB payloads. Host rows were sampled under a per-sample load gate of 4 (1-minute load median 3.4, maximum 5.5); the load-filtered rows drop the 13 wasm and 3 native samples above 4.}
+\label{tab:hostfit}
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{llrrrr}
+\toprule
+Sample & Side & n & $\alpha$ (ns) & $\beta$ (ns/B) & $R^2$ \\
+\midrule
+all samples & wasm & 6482 & -8765 $\pm$ 2249 & 0.1366 $\pm$ 0.0003 & 0.989 \\
+all samples & native & 6482 & 22480 $\pm$ 2497 & 0.0879 $\pm$ 0.0004 & 0.969 \\
+load $<4$ & wasm & 6469 & -8813 $\pm$ 2253 & 0.1366 $\pm$ 0.0003 & 0.989 \\
+load $<4$ & native & 6479 & 22463 $\pm$ 2497 & 0.0879 $\pm$ 0.0004 & 0.969 \\
+Small payloads ($64$\,B to $16$\,KiB) & Wasm host call & 2778 & 5786 $\pm$ 48 & 0.0819 $\pm$ 0.0051 & 0.265 \\
+Small payloads ($64$\,B to $16$\,KiB) & Native baseline & 2778 & 123 $\pm$ 2 & 0.0623 $\pm$ 0.0002 & 0.990 \\
+WASI write, all sizes & WASI Preview 1 & 3241 & 121 $\pm$ 1190 & 0.2787 $\pm$ 0.0002 & 1.000 \\
+WASI write, all sizes & WASI Preview 2 & 3241 & -1716 $\pm$ 1048 & 0.1798 $\pm$ 0.0002 & 0.999 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

@@ -1,0 +1,2 @@
+wasm {'alpha_ns': -9838.8002, 'alpha_ci_half': 3774.6015, 'beta_ns_per_byte': 0.1469, 'beta_ci_half': 0.0006, 'r_squared': 0.9747}
+native {'alpha_ns': 24211.7359, 'alpha_ci_half': 2318.9897, 'beta_ns_per_byte': 0.0936, 'beta_ci_half': 0.0004, 'r_squared': 0.9764}

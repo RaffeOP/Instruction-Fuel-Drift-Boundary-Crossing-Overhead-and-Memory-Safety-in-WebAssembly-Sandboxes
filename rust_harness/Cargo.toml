@@ -1,0 +1,29 @@
+[package]
+name = "r3bench"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasmtime = { version = "=50.0.0", features = ["winch"] }
+wasmer = { version = "=7.5.0", default-features = false, features = ["sys", "singlepass", "cranelift", "llvm"] }
+libc = "0.2"
+wasmtime-wasi = "=50.0.0"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+
+[[bin]]
+name = "r3bench"
+path = "src/main.rs"
+
+[[bin]]
+name = "recycle"
+path = "src/bin/recycle.rs"
+
+[dependencies.wasmer-middlewares]
+version = "=7.5.0"
+
+[[bin]]
+name = "wasi_bench"
+path = "src/bin/wasi_bench.rs"

@@ -1,0 +1,16 @@
+\begin{table}[t]
+\caption{Corpus summary. Each kernel is compiled at four frontend optimization levels, giving 200 modules. Median module size is in kibibytes of \texttt{wasm32-wasip1} output.}\label{tab:corpus}
+\footnotesize
+\setlength{\tabcolsep}{5pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrrrr}
+\toprule
+Group & Kernels & Modules & \texttt{-O0} KiB & \texttt{-O2} KiB & \texttt{-O3} KiB & \texttt{-Oz} KiB \\
+\midrule
+PolyBench/C numerical & 30 & 120 & 34.0 & 18.7 & 18.8 & 18.6 \\
+Integer and cryptographic & 10 & 40 & 0.7 & 0.9 & 0.9 & 0.6 \\
+Linear-memory behavior & 10 & 40 & 0.7 & 1.0 & 1.0 & 0.6 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

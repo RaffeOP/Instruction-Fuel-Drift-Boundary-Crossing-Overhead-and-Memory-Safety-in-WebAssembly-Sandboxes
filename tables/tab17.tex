@@ -1,0 +1,20 @@
+\begin{table}[t]
+\caption{Host-call and WASI costs by payload size. Host-call entries are medians of the per-call time, in microseconds, for the wasm boundary and for the native copy-and-validate. WASI entries are the median over replicates of the full-minus-baseline CPU time per write, in microseconds, for Preview 1 and Preview 2. The last column is the Preview 2 to Preview 1 ratio.}\label{tab:rq3_sweep}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrrrr}
+\toprule
+Payload & Host call ($\mu$s) & Native ($\mu$s) & Ratio & P1 write ($\mu$s) & P2 write ($\mu$s) & P2/P1 \\
+\midrule
+64\,B & 5.628 & 0.092 & 61.2 & 0.801 & 0.886 & 1.11 \\
+1\,KiB & 5.814 & 0.220 & 26.4 & 0.966 & 1.049 & 1.09 \\
+16\,KiB & 7.022 & 1.134 & 6.2 & 4.838 & 3.313 & 0.68 \\
+256\,KiB & 38.541 & 25.848 & 1.5 & 72.999 & 45.337 & 0.62 \\
+1\,MiB & 96.220 & 76.961 & 1.3 & 290.427 & 184.654 & 0.64 \\
+4\,MiB & 542.554 & 549.053 & 1.0 & 1161.295 & 742.152 & 0.64 \\
+16\,MiB & 2,273.106 & 1,448.430 & 1.6 & 4655.712 & 3006.383 & 0.65 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

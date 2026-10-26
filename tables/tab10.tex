@@ -1,0 +1,38 @@
+\begin{table}[t]
+\caption{Cost per fuel unit $\mu_\psi$ in nanoseconds for every kernel under Wasmtime Cranelift, at each frontend optimization level. Each entry is the mean over the timed replicates of that cell.}\label{tab:per_kernel_psi}
+\footnotesize
+\setlength{\tabcolsep}{3pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrr|lrrrr}
+\toprule
+Kernel & O0 & O2 & O3 & Oz & Kernel & O0 & O2 & O3 & Oz \\
+\midrule
+adv\_branch & 0.114 & 0.086 & 0.086 & 0.083 & pb\_cholesky & 0.019 & 0.028 & 0.029 & 0.071 \\
+cachethrash & 0.030 & 0.032 & 0.032 & 0.045 & pb\_correlation & 0.017 & 0.040 & 0.041 & 0.063 \\
+chacha20 & 0.047 & 0.028 & 0.028 & 0.051 & pb\_covariance & 0.016 & 0.059 & 0.058 & 0.063 \\
+collatz & 0.049 & 0.055 & 0.054 & 0.051 & pb\_deriche & 0.040 & 0.083 & 0.082 & 0.103 \\
+crc32 & 0.028 & 0.048 & 0.048 & 0.053 & pb\_doitgen & 0.022 & 0.031 & 0.029 & 0.031 \\
+divrem & 0.025 & 0.030 & 0.029 & 0.034 & pb\_durbin & 0.019 & 0.029 & 0.029 & 0.033 \\
+fnv1a & 0.039 & 0.066 & 0.065 & 0.055 & pb\_fdtd\_2d & 0.015 & 0.020 & 0.022 & 0.063 \\
+quicksort & 0.076 & 0.108 & 0.106 & 0.106 & pb\_floyd\_warshall & 0.016 & 0.046 & 0.018 & 0.057 \\
+sha256 & 0.052 & 0.024 & 0.023 & 0.029 & pb\_gemm & 0.018 & 0.041 & 0.041 & 0.081 \\
+strsearch & 0.048 & 0.075 & 0.074 & 0.058 & pb\_gemver & 0.019 & 0.038 & 0.035 & 0.035 \\
+mem\_binary\_search & 0.127 & 0.163 & 0.157 & 0.135 & pb\_gesummv & 0.023 & 0.042 & 0.041 & 0.057 \\
+mem\_fill\_reduce & 0.022 & 0.022 & 0.021 & 0.045 & pb\_gramschmidt & 0.018 & 0.033 & 0.033 & 0.043 \\
+mem\_grow\_monotonic & 0.084 & 0.152 & 0.133 & 0.093 & pb\_heat\_3d & 0.011 & 0.022 & 0.023 & 0.020 \\
+mem\_hashtable & 0.057 & 0.103 & 0.095 & 0.114 & pb\_jacobi\_1d & 0.017 & 0.026 & 0.028 & 0.032 \\
+mem\_oob\_offset\_wrap & 0.023 & 0.033 & 0.032 & 0.052 & pb\_jacobi\_2d & 0.014 & 0.022 & 0.024 & 0.053 \\
+mem\_pointer\_chase & 0.153 & 0.462 & 0.362 & 0.268 & pb\_lu & 0.019 & 0.031 & 0.032 & 0.072 \\
+mem\_stream\_copy & 0.020 & 0.027 & 0.026 & 0.052 & pb\_ludcmp & 0.021 & 0.026 & 0.027 & 0.074 \\
+mem\_stride\_4k & 0.055 & 0.270 & 0.252 & 0.138 & pb\_mvt & 0.032 & 0.060 & 0.051 & 0.078 \\
+mem\_stride\_64 & 0.044 & 0.040 & 0.043 & 0.043 & pb\_nussinov & 0.015 & 0.021 & 0.021 & 0.048 \\
+mem\_transpose & 0.049 & 0.173 & 0.167 & 0.112 & pb\_seidel\_2d & 0.038 & 0.160 & 0.163 & 0.139 \\
+pb\_2mm & 0.029 & 0.037 & 0.042 & 0.078 & pb\_symm & 0.024 & 0.026 & 0.030 & 0.059 \\
+pb\_3mm & 0.024 & 0.040 & 0.040 & 0.083 & pb\_syr2k & 0.016 & 0.039 & 0.036 & 0.052 \\
+pb\_adi & 0.026 & 0.102 & 0.103 & 0.072 & pb\_syrk & 0.016 & 0.022 & 0.023 & 0.070 \\
+pb\_atax & 0.032 & 0.032 & 0.034 & 0.034 & pb\_trisolv & 0.019 & 0.047 & 0.048 & 0.061 \\
+pb\_bicg & 0.022 & 0.041 & 0.042 & 0.027 & pb\_trmm & 0.026 & 0.035 & 0.037 & 0.025 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Log-transformed Welch ANOVA of on-CPU time across frontend optimization levels (Wasmtime Cranelift, 100 replicates per cell), summarized by kernel group.}
+\label{tab:anova}
+\resizebox{\columnwidth}{!}{%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrrr}
+\toprule
+Group & Kernels & $p<0.05$ & median $F_W$ & median $\eta_p^2$ & min $\eta_p^2$ \\
+\midrule
+integer & 10 & 10 & 41695.7 & 0.956 & 0.726 \\
+memory & 10 & 10 & 4181.3 & 0.947 & 0.309 \\
+polybench & 30 & 30 & 5001.8 & 0.926 & 0.629 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+}
+\end{table}

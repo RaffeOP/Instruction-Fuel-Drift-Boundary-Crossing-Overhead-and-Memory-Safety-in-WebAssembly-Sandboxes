@@ -1,0 +1,25 @@
+\begin{table}[t]
+\caption{Median per-kernel time ratio relative to Wasmtime Cranelift at each optimization level (median over the 50 kernels of the per-kernel ratio of median CPU time). Pooling the four levels reproduces the statistic in Table~\ref{tab:runtime_summary}.}\label{tab:ratio_by_level}
+\footnotesize
+\setlength{\tabcolsep}{5pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrr}
+\toprule
+Runtime & \texttt{-O0} & \texttt{-O2} & \texttt{-O3} & \texttt{-Oz} \\
+\midrule
+V8 (Node.js) & $1.00\times$ & $0.77\times$ & $0.77\times$ & $0.54\times$ \\
+WAMR interpreter & $16.76\times$ & $9.48\times$ & $9.49\times$ & $5.88\times$ \\
+WasmEdge AOT & $1.13\times$ & $0.79\times$ & $0.76\times$ & $0.50\times$ \\
+WasmEdge interpreter & $147.35\times$ & $82.63\times$ & $83.87\times$ & $50.67\times$ \\
+Wasmer Cranelift & $0.91\times$ & $0.85\times$ & $0.84\times$ & $0.79\times$ \\
+Wasmer Cranelift, metered & $1.24\times$ & $0.96\times$ & $0.94\times$ & $1.00\times$ \\
+Wasmer LLVM & $1.93\times$ & $0.83\times$ & $0.83\times$ & $0.56\times$ \\
+Wasmer LLVM, metered & $1.88\times$ & $0.88\times$ & $0.86\times$ & $0.80\times$ \\
+Wasmer Singlepass & $16.88\times$ & $19.59\times$ & $19.81\times$ & $11.52\times$ \\
+Wasmer Singlepass, metered & $17.20\times$ & $18.92\times$ & $19.15\times$ & $11.10\times$ \\
+Wasmtime Cranelift (reference) & $1.00\times$ & $1.00\times$ & $1.00\times$ & $1.00\times$ \\
+Wasmtime Winch, metered & $4.17\times$ & $1.91\times$ & $1.93\times$ & $1.64\times$ \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

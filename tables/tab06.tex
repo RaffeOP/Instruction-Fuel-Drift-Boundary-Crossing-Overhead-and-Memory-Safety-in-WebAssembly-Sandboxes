@@ -1,0 +1,25 @@
+\begin{table}[t]
+\caption{Cross-runtime summary over the 200 cells. Time ratios are relative to Wasmtime Cranelift; $\mathcal{A}_{\mathrm{adv}}$ is the largest over smallest cost per fuel unit, $P_{95}/P_5$ and $\mathrm{IQR}_\psi$ are the 95th-to-5th and 75th-to-25th percentile ratios of that cost, and $\mathrm{CV}(\mu_\psi)$ is its coefficient of variation. Effective clock $f_{\mathrm{eff}}$ in GHz is the per-cell median of cycles per CPU nanosecond, and IPC is the per-cell median of retired instructions per cycle. Dashes mark runtimes without a fuel meter.}\label{tab:runtime_summary}
+\footnotesize
+\setlength{\tabcolsep}{3pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Runtime & Median ($\times$) & IQR ($\times$) & $\mathcal{A}_{\mathrm{adv}}$ & $P_{95}/P_5$ & $\mathrm{IQR}_\psi$ & $\mathrm{CV}(\mu_\psi)$ & $f_{\mathrm{eff}}$ & IPC \\
+\midrule
+V8 (Node.js) & $0.81$ & $[0.67, 0.95]$ & --- & --- & --- & --- & $3.69$ & $4.9$ \\
+WAMR interpreter & $9.45$ & $[5.66, 13.33]$ & --- & --- & --- & --- & $3.73$ & $4.6$ \\
+WasmEdge AOT & $0.81$ & $[0.63, 0.98]$ & $39.4$ & $9.1$ & $2.0$ & $1.19$ & $3.67$ & $4.4$ \\
+WasmEdge interpreter & $80.94$ & $[46.84, 116.18]$ & $1.6$ & $1.3$ & $1.1$ & $0.08$ & $3.73$ & $5.3$ \\
+Wasmer Cranelift & $0.86$ & $[0.72, 0.95]$ & --- & --- & --- & --- & $3.72$ & $5.4$ \\
+Wasmer Cranelift, metered & $1.01$ & $[0.85, 1.21]$ & $40.2$ & $7.3$ & $2.5$ & $0.98$ & $3.73$ & $5.1$ \\
+Wasmer LLVM & $0.84$ & $[0.69, 1.21]$ & --- & --- & --- & --- & $3.73$ & $3.8$ \\
+Wasmer LLVM, metered & $0.92$ & $[0.80, 1.25]$ & $22.2$ & $8.0$ & $2.2$ & $0.99$ & $3.73$ & $4.9$ \\
+Wasmer Singlepass & $12.16$ & $[1.62, 36.52]$ & --- & --- & --- & --- & $3.70$ & $1.3$ \\
+Wasmer Singlepass, metered & $11.79$ & $[1.85, 35.61]$ & $55.8$ & $35.6$ & $11.0$ & $0.97$ & $3.72$ & $1.5$ \\
+Wasmtime Cranelift (reference) & $1.00$ & $[1.00, 1.00]$ & $40.8$ & $8.9$ & $2.4$ & $0.98$ & $3.65$ & $4.8$ \\
+Wasmtime Winch, metered & $2.13$ & $[1.57, 3.04]$ & $11.6$ & $3.7$ & $1.6$ & $0.56$ & $3.72$ & $5.5$ \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\caption{Trap-conformance rate $\tau_{\mathrm{trap}}$ per memory configuration (8 probes, 100 trials each), with exact 95\% Clopper--Pearson intervals.}
+\label{tab:boundary}
+\resizebox{\columnwidth}{!}{%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrl}
+\toprule
+Configuration & Trials & Conforming & $\tau_{\mathrm{trap}}$ & 95\% CI \\
+\midrule
+default\_2gib\_guard & 800 & 800 & 1.000 & [0.9954, 1.000] \\
+reduced\_64kib\_guard & 800 & 800 & 1.000 & [0.9954, 1.000] \\
+zero\_guard & 800 & 800 & 1.000 & [0.9954, 1.000] \\
+zero\_guard\_explicit\_checks & 800 & 800 & 1.000 & [0.9954, 1.000] \\
+no\_growth\_reservation & 800 & 800 & 1.000 & [0.9954, 1.000] \\
+zero\_guard\_no\_growth\_reservation & 800 & 800 & 1.000 & [0.9954, 1.000] \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+}
+\end{table}

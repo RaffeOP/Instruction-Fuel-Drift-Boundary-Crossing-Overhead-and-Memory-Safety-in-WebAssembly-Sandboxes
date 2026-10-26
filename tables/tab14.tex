@@ -1,0 +1,26 @@
+\begin{table}[t]
+\caption{Dynamic operator-class shares across the 200 cells, in percent of executed operations. Shares are computed from the instrumented counts in \texttt{dynamic\_opcode\_mix.csv}.}\label{tab:opcode_shares}
+\footnotesize
+\setlength{\tabcolsep}{6pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrr}
+\toprule
+Operator class & Median (\%) & Minimum (\%) & Maximum (\%) \\
+\midrule
+\texttt{int\_arith} & 17.67 & 10.04 & 43.15 \\
+\texttt{float\_arith} & 3.49 & 0.00 & 20.12 \\
+\texttt{compare} & 2.69 & 0.00 & 11.57 \\
+\texttt{memory\_load} & 9.89 & 0.00 & 26.20 \\
+\texttt{memory\_store} & 3.80 & 0.00 & 10.00 \\
+\texttt{branch} & 2.94 & 0.34 & 11.77 \\
+\texttt{control} & 0.04 & 0.00 & 8.33 \\
+\texttt{call} & 0.00 & 0.00 & 1.46 \\
+\texttt{local\_global} & 35.77 & 17.35 & 51.54 \\
+\texttt{const} & 14.60 & 6.99 & 34.26 \\
+\texttt{conversion} & 0.03 & 0.00 & 11.42 \\
+\texttt{memory\_ops} & 0.00 & 0.00 & 0.01 \\
+\texttt{other} & 0.00 & 0.00 & 5.14 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

@@ -1,0 +1,3 @@
+on_demand_default tail {'threshold_ns': 36167.0, 'shape_xi': 0.10752889737935498, 'scale_sigma_ns': 2025.0219388813005, 'exceedances': 5981}
+no_growth_reservation tail {'threshold_ns': 38958.0, 'shape_xi': 0.11605302494135633, 'scale_sigma_ns': 1835.4726405326956, 'exceedances': 5987}
+recycling sweep written to /Users/raffe/Downloads/R3/data/rq4_multitenant_rss_uss.csv

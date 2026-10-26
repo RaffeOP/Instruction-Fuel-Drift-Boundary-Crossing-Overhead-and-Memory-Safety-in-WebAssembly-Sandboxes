@@ -1,0 +1,17 @@
+\begin{table}[t]
+\caption{Load telemetry sampled during the campaign. The 1-minute load average is read at a fixed interval. The admission gate for each replicate is a load of at most 4. This table reports the whole sampled series, not the load at each replicate's start, which the per-replicate log does not record.}\label{tab:load}
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lr}
+\toprule
+Quantity & Value \\
+\midrule
+Samples & 5,340 \\
+Span (hours) & 17.7 \\
+Median 1-minute load & 4.35 \\
+95th percentile & 17.39 \\
+Maximum & 55.95 \\
+Share of samples above the gate of 4 & 54.3\% \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

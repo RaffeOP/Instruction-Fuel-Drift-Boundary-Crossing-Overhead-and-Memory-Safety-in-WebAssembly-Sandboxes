@@ -1,0 +1,77 @@
+{\scriptsize\setlength{\tabcolsep}{3pt}%
+\begin{longtable}{lrrr}
+\caption{Linear-memory probe outcomes for every configuration and probe. Each probe row covers the 100 trials of one probe under one guard configuration. A specified return and a graceful trap both conform to the specification.}\label{tab:rq2_outcomes}\\
+\toprule
+Probe & Trials & Graceful & Spec.\ return \\
+\midrule
+\endfirsthead
+\toprule
+Probe & Trials & Graceful & Spec.\ return \\
+\midrule
+\endhead
+\midrule
+\multicolumn{4}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+\multicolumn{4}{l}{\texttt{default\_\allowbreak 2gib\_\allowbreak guard}} \\
+\quad \texttt{grow\_\allowbreak one\_\allowbreak page} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak past\_\allowbreak 4gib} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak to\_\allowbreak max\_\allowbreak minus\_\allowbreak one} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak addr\_\allowbreak 4gib\_\allowbreak minus\_\allowbreak 4} & 100 & 100 & 0 \\
+\quad \texttt{load\_\allowbreak at\_\allowbreak zero} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak high\_\allowbreak half} & 100 & 100 & 0 \\
+\quad \texttt{store\_\allowbreak last\_\allowbreak word\_\allowbreak in\_\allowbreak bounds} & 100 & 0 & 100 \\
+\quad \texttt{store\_\allowbreak one\_\allowbreak past\_\allowbreak end} & 100 & 100 & 0 \\
+\midrule
+\multicolumn{4}{l}{\texttt{no\_\allowbreak growth\_\allowbreak reservation}} \\
+\quad \texttt{grow\_\allowbreak one\_\allowbreak page} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak past\_\allowbreak 4gib} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak to\_\allowbreak max\_\allowbreak minus\_\allowbreak one} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak addr\_\allowbreak 4gib\_\allowbreak minus\_\allowbreak 4} & 100 & 100 & 0 \\
+\quad \texttt{load\_\allowbreak at\_\allowbreak zero} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak high\_\allowbreak half} & 100 & 100 & 0 \\
+\quad \texttt{store\_\allowbreak last\_\allowbreak word\_\allowbreak in\_\allowbreak bounds} & 100 & 0 & 100 \\
+\quad \texttt{store\_\allowbreak one\_\allowbreak past\_\allowbreak end} & 100 & 100 & 0 \\
+\midrule
+\multicolumn{4}{l}{\texttt{reduced\_\allowbreak 64kib\_\allowbreak guard}} \\
+\quad \texttt{grow\_\allowbreak one\_\allowbreak page} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak past\_\allowbreak 4gib} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak to\_\allowbreak max\_\allowbreak minus\_\allowbreak one} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak addr\_\allowbreak 4gib\_\allowbreak minus\_\allowbreak 4} & 100 & 100 & 0 \\
+\quad \texttt{load\_\allowbreak at\_\allowbreak zero} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak high\_\allowbreak half} & 100 & 100 & 0 \\
+\quad \texttt{store\_\allowbreak last\_\allowbreak word\_\allowbreak in\_\allowbreak bounds} & 100 & 0 & 100 \\
+\quad \texttt{store\_\allowbreak one\_\allowbreak past\_\allowbreak end} & 100 & 100 & 0 \\
+\midrule
+\multicolumn{4}{l}{\texttt{zero\_\allowbreak guard}} \\
+\quad \texttt{grow\_\allowbreak one\_\allowbreak page} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak past\_\allowbreak 4gib} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak to\_\allowbreak max\_\allowbreak minus\_\allowbreak one} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak addr\_\allowbreak 4gib\_\allowbreak minus\_\allowbreak 4} & 100 & 100 & 0 \\
+\quad \texttt{load\_\allowbreak at\_\allowbreak zero} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak high\_\allowbreak half} & 100 & 100 & 0 \\
+\quad \texttt{store\_\allowbreak last\_\allowbreak word\_\allowbreak in\_\allowbreak bounds} & 100 & 0 & 100 \\
+\quad \texttt{store\_\allowbreak one\_\allowbreak past\_\allowbreak end} & 100 & 100 & 0 \\
+\midrule
+\multicolumn{4}{l}{\texttt{zero\_\allowbreak guard\_\allowbreak explicit\_\allowbreak checks}} \\
+\quad \texttt{grow\_\allowbreak one\_\allowbreak page} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak past\_\allowbreak 4gib} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak to\_\allowbreak max\_\allowbreak minus\_\allowbreak one} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak addr\_\allowbreak 4gib\_\allowbreak minus\_\allowbreak 4} & 100 & 100 & 0 \\
+\quad \texttt{load\_\allowbreak at\_\allowbreak zero} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak high\_\allowbreak half} & 100 & 100 & 0 \\
+\quad \texttt{store\_\allowbreak last\_\allowbreak word\_\allowbreak in\_\allowbreak bounds} & 100 & 0 & 100 \\
+\quad \texttt{store\_\allowbreak one\_\allowbreak past\_\allowbreak end} & 100 & 100 & 0 \\
+\midrule
+\multicolumn{4}{l}{\texttt{zero\_\allowbreak guard\_\allowbreak no\_\allowbreak growth\_\allowbreak reservation}} \\
+\quad \texttt{grow\_\allowbreak one\_\allowbreak page} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak past\_\allowbreak 4gib} & 100 & 0 & 100 \\
+\quad \texttt{grow\_\allowbreak to\_\allowbreak max\_\allowbreak minus\_\allowbreak one} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak addr\_\allowbreak 4gib\_\allowbreak minus\_\allowbreak 4} & 100 & 100 & 0 \\
+\quad \texttt{load\_\allowbreak at\_\allowbreak zero} & 100 & 0 & 100 \\
+\quad \texttt{load\_\allowbreak high\_\allowbreak half} & 100 & 100 & 0 \\
+\quad \texttt{store\_\allowbreak last\_\allowbreak word\_\allowbreak in\_\allowbreak bounds} & 100 & 0 & 100 \\
+\quad \texttt{store\_\allowbreak one\_\allowbreak past\_\allowbreak end} & 100 & 100 & 0 \\
+\end{longtable}
+}

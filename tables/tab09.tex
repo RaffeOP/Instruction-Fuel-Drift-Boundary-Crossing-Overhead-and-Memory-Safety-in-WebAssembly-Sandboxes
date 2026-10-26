@@ -1,0 +1,13 @@
+\begin{table}[t]
+\caption{Linear recalibration bound on the 200 Cranelift cells. $R^2$ is the in-sample coefficient of determination of a least-squares fit of $\mu_\psi$ on the operator-class shares, with an intercept. The in-sample bound is $\mathrm{CV}(\mu_\psi)\sqrt{1-R^2}$ with $\mathrm{CV}(\mu_\psi)=0.983$, the smallest residual coefficient of variation any such fit can reach (Proposition~\ref{prop:linear_bound}). The last column is the lowest leave-one-cell-out CV from Table~\ref{tab:rq5}. That score is multiplicative, CV of time divided by prediction, so the in-sample bound does not apply to it.}\label{tab:rq5_bound}
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrr}
+\toprule
+Class counts & Cells & $R^2$ & In-sample bound & Best LOO CV \\
+\midrule
+Static class counts & 200 & 0.244 & 0.854 & 1.618 \\
+Dynamic class counts & 200 & 0.182 & 0.889 & 0.987 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

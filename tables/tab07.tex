@@ -1,0 +1,25 @@
+\begin{table}[t]
+\caption{Kernels whose Winch and Cranelift fuel differ above numerical noise at \texttt{-O2} and \texttt{-O3}. Cranelift fuel is in millions of units; the Winch column gives the signed relative difference $(F_{\mathrm{Winch}}-F_{\mathrm{Cranelift}})/F_{\mathrm{Cranelift}}$. These 20 cells are the backend disagreements reported in the text. Every other cell agrees exactly, except four \texttt{pb\_heat\_3d} cells that differ by eight fuel units (relative difference below $10^{-7}$).}\label{tab:backend_disagreement}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{\texttt{-O2}} & \multicolumn{2}{c}{\texttt{-O3}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Kernel & Cranelift fuel (M) & Winch vs.\ Cranelift & Cranelift fuel (M) & Winch vs.\ Cranelift \\
+\midrule
+\texttt{mem\_hashtable} & 115.6 & -10.89\% & 115.6 & -10.89\% \\
+\texttt{mem\_stream\_copy} & 604.2 & -16.66\% & 327.3 & -16.66\% \\
+\texttt{pb\_atax} & 276.1 & -0.04\% & 347.3 & -0.04\% \\
+\texttt{pb\_bicg} & 187.3 & -0.04\% & 178.7 & -0.04\% \\
+\texttt{pb\_cholesky} & 1,564.7 & -0.12\% & 1,564.7 & -0.12\% \\
+\texttt{pb\_durbin} & 508.4 & -15.82\% & 403.5 & -15.82\% \\
+\texttt{pb\_gramschmidt} & 466.7 & -0.20\% & 233.4 & -0.20\% \\
+\texttt{pb\_lu} & 1,774.3 & -0.11\% & 1,774.3 & -0.11\% \\
+\texttt{pb\_ludcmp} & 1,713.9 & -0.11\% & 1,713.6 & -0.11\% \\
+\texttt{pb\_nussinov} & 551.0 & -0.18\% & 551.0 & -0.18\% \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

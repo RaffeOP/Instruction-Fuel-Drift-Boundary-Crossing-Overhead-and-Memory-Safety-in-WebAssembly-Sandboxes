@@ -1,0 +1,26 @@
+\begin{table}[t]
+\caption{Taxonomic comparison of this study against representative empirical WebAssembly runtime, security, and WASI studies. Entries summarize the scope described for each work in Section~\ref{sec:related}. A dash means that the work does not report that measurement.}\label{tab:lit_taxonomy}
+\footnotesize
+\setlength{\tabcolsep}{3pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lllllllll}
+\toprule
+Study & Venue (year) & Runtimes & Opt.\ levels & Fuel drift & Backend fuel & Guard probes & WASI P1 vs.\ P2 & Recycling \\
+\midrule
+Haas et al.~\cite{haas2017bringing} & PLDI 2017 & Browsers & --- & --- & --- & --- & --- & --- \\
+Jangda et al.~\cite{jangda2019not} & USENIX ATC 2019 & Browsers (2) & --- & --- & --- & --- & --- & --- \\
+Shillaker \& Pietzuch~\cite{shillaker2020faasm} & USENIX ATC 2020 & Faasm (Wasm SFI) & --- & --- & --- & --- & Faaslet host interface & Snapshot restore \\
+Lehmann et al.~\cite{lehmann2020binary} & USENIX Security 2020 & --- & --- & --- & --- & --- & --- & --- \\
+Titzer et al.~\cite{titzer2024flexible} & ASPLOS 2024 & Wizard engine & --- & Dynamic probes & --- & --- & --- & --- \\
+Kakati \& Brorsson~\cite{kakati2024cross} & CCGrid 2024 & 2 runtimes, 4 ISAs & --- & --- & --- & --- & --- & Startup time \\
+Mao et al.~\cite{mao2024ewapa} & SSE 2024 & --- & --- & --- & --- & --- & eBPF WASI trace & --- \\
+Khan et al.~\cite{khan2026taxonomy} & IEEE Access 2026 & 13 WASI runtimes & --- & --- & --- & --- & --- & --- \\
+Yu et al.~\cite{yu2025resource} & USENIX Security 2025 & --- & --- & --- & --- & --- & Host exhaustion via WASI/WASIX & --- \\
+Jansen et al.~\cite{jansen2025memory} & IPDPSW 2025 & WAMR in containers & --- & --- & --- & --- & --- & Memory footprint \\
+Yu et al.~\cite{yu2026wasc} & ACM TACO 2026 & WaSC daemon & --- & --- & --- & --- & Decoupled WASI daemon & Multi-tenant density \\
+\midrule
+\textbf{This study} & \textbf{2026} & \textbf{12 configurations} & \textbf{4 (\texttt{-O0}--\texttt{-Oz})} & \textbf{Yes ($40.8\times$)} & \textbf{Yes (20 cells)} & \textbf{Yes (4,800 probes)} & \textbf{Yes (64\,B--16\,MiB)} & \textbf{Yes (1.68M lifecycles)} \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

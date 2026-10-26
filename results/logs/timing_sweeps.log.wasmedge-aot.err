@@ -1,0 +1,6 @@
+done wasmedge-aot O0 pb_gemm
+done wasmedge-aot O0 pb_gemver
+done wasmedge-aot O0 pb_gesummv
+done wasmedge-aot O0 pb_symm
+done wasmedge-aot O0 pb_syr2k
+done wasmedge-aot O0 pb_syrk

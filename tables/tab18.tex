@@ -1,0 +1,68 @@
+{\scriptsize\setlength{\tabcolsep}{4pt}%
+\begin{longtable}{llrrp{2.0cm}r}
+\caption{Welch's heteroscedastic ANOVA of log-transformed CPU time across the four frontend levels, for each kernel under Wasmtime Cranelift. Degrees of freedom between groups are 3 for every kernel. The within-group degrees of freedom are fractional because of the Welch correction.}\label{tab:per_kernel_anova}\\
+\toprule
+Kernel & Group & $F_W$ & $\mathrm{df}$ & $p$ & $\eta_p^2$ \\
+\midrule
+\endfirsthead
+\toprule
+Kernel & Group & $F_W$ & $\mathrm{df}$ & $p$ & $\eta_p^2$ \\
+\midrule
+\endhead
+\midrule
+\multicolumn{6}{r}{Continued on next page}\\
+\endfoot
+\bottomrule
+\endlastfoot
+\texttt{adv\_branch} & integer & 65,644.5 & 216.1 & $<10^{-300}$ & 0.998 \\
+\texttt{cachethrash} & integer & 124,317.5 & 187.5 & $6.31\times10^{-309}$ & 0.994 \\
+\texttt{chacha20} & integer & 58,066.1 & 203.5 & $3.93\times10^{-298}$ & 0.996 \\
+\texttt{collatz} & integer & 5,369.3 & 207.9 & $1.20\times10^{-196}$ & 0.986 \\
+\texttt{crc32} & integer & 420.1 & 216.8 & $5.01\times10^{-90}$ & 0.726 \\
+\texttt{divrem} & integer & 441,886.3 & 209.9 & $<10^{-300}$ & 0.996 \\
+\texttt{fnv1a} & integer & 56,967.3 & 201.1 & $2.57\times10^{-294}$ & 0.873 \\
+\texttt{mem\_binary\_search} & memory & 433.9 & 170.6 & $1.38\times10^{-79}$ & 0.792 \\
+\texttt{mem\_fill\_reduce} & memory & 5,109.2 & 211.3 & $7.59\times10^{-197}$ & 0.939 \\
+\texttt{mem\_grow\_monotonic} & memory & 3,253.4 & 210.6 & $4.69\times10^{-176}$ & 0.956 \\
+\texttt{mem\_hashtable} & memory & 8,997.3 & 209.9 & $2.35\times10^{-221}$ & 0.986 \\
+\texttt{mem\_oob\_offset\_wrap} & memory & 154,549.4 & 199.4 & $<10^{-300}$ & 0.998 \\
+\texttt{mem\_pointer\_chase} & memory & 297.1 & 170.3 & $2.07\times10^{-67}$ & 0.309 \\
+\texttt{mem\_stream\_copy} & memory & 15,084.9 & 170.1 & $3.94\times10^{-206}$ & 0.988 \\
+\texttt{mem\_stride\_4k} & memory & 447.1 & 187.7 & $3.24\times10^{-85}$ & 0.823 \\
+\texttt{mem\_stride\_64} & memory & 2,280.2 & 212.7 & $2.16\times10^{-161}$ & 0.911 \\
+\texttt{mem\_transpose} & memory & 6,567.3 & 215.6 & $1.44\times10^{-211}$ & 0.983 \\
+\texttt{pb\_2mm} & polybench & 6,353.6 & 189.4 & $9.46\times10^{-190}$ & 0.946 \\
+\texttt{pb\_3mm} & polybench & 2,638.3 & 202.9 & $3.44\times10^{-162}$ & 0.883 \\
+\texttt{pb\_adi} & polybench & 410.7 & 201.1 & $1.80\times10^{-85}$ & 0.759 \\
+\texttt{pb\_atax} & polybench & 2,076.0 & 187.1 & $2.54\times10^{-143}$ & 0.852 \\
+\texttt{pb\_bicg} & polybench & 3,421.9 & 184.0 & $4.10\times10^{-161}$ & 0.958 \\
+\texttt{pb\_cholesky} & polybench & 2,385.6 & 199.2 & $8.80\times10^{-156}$ & 0.889 \\
+\texttt{pb\_correlation} & polybench & 1,645.1 & 176.2 & $1.46\times10^{-128}$ & 0.927 \\
+\texttt{pb\_covariance} & polybench & 84,003.0 & 203.8 & $<10^{-300}$ & 0.994 \\
+\texttt{pb\_deriche} & polybench & 27,433.4 & 200.3 & $1.60\times10^{-261}$ & 0.991 \\
+\texttt{pb\_doitgen} & polybench & 1,102.6 & 182.9 & $8.28\times10^{-117}$ & 0.867 \\
+\texttt{pb\_durbin} & polybench & 2,732.0 & 197.6 & $1.57\times10^{-160}$ & 0.881 \\
+\texttt{pb\_fdtd\_2d} & polybench & 10,773.1 & 206.8 & $8.03\times10^{-227}$ & 0.986 \\
+\texttt{pb\_floyd\_warshall} & polybench & 78,419.6 & 209.3 & $<10^{-300}$ & 0.913 \\
+\texttt{pb\_gemm} & polybench & 7,044.5 & 206.4 & $1.53\times10^{-207}$ & 0.964 \\
+\texttt{pb\_gemver} & polybench & 775.4 & 170.8 & $3.37\times10^{-99}$ & 0.629 \\
+\texttt{pb\_gesummv} & polybench & 22,101.6 & 192.6 & $4.64\times10^{-244}$ & 0.964 \\
+\texttt{pb\_gramschmidt} & polybench & 1,461.2 & 210.6 & $1.28\times10^{-140}$ & 0.826 \\
+\texttt{pb\_heat\_3d} & polybench & 16,816.0 & 206.7 & $1.27\times10^{-246}$ & 0.993 \\
+\texttt{pb\_jacobi\_1d} & polybench & 10,345.6 & 172.7 & $1.37\times10^{-194}$ & 0.972 \\
+\texttt{pb\_jacobi\_2d} & polybench & 4,472.9 & 207.5 & $3.22\times10^{-188}$ & 0.974 \\
+\texttt{pb\_lu} & polybench & 1,551.6 & 188.0 & $2.52\times10^{-132}$ & 0.913 \\
+\texttt{pb\_ludcmp} & polybench & 2,636.7 & 181.0 & $4.57\times10^{-149}$ & 0.942 \\
+\texttt{pb\_mvt} & polybench & 5,530.6 & 176.8 & $1.79\times10^{-174}$ & 0.921 \\
+\texttt{pb\_nussinov} & polybench & 96,425.4 & 206.9 & $<10^{-300}$ & 0.885 \\
+\texttt{pb\_seidel\_2d} & polybench & 1,185.9 & 197.2 & $7.30\times10^{-126}$ & 0.926 \\
+\texttt{pb\_symm} & polybench & 223.9 & 194.6 & $7.99\times10^{-63}$ & 0.709 \\
+\texttt{pb\_syr2k} & polybench & 35,655.4 & 211.1 & $3.15\times10^{-285}$ & 0.989 \\
+\texttt{pb\_syrk} & polybench & 6,786.4 & 210.0 & $1.03\times10^{-208}$ & 0.989 \\
+\texttt{pb\_trisolv} & polybench & 21,282.6 & 211.3 & $7.14\times10^{-262}$ & 0.997 \\
+\texttt{pb\_trmm} & polybench & 12,939.7 & 168.2 & $1.19\times10^{-198}$ & 0.901 \\
+\texttt{quicksort} & integer & 816.2 & 207.2 & $1.93\times10^{-114}$ & 0.896 \\
+\texttt{sha256} & integer & 2,633.6 & 201.4 & $2.78\times10^{-161}$ & 0.926 \\
+\texttt{strsearch} & integer & 26,424.2 & 211.5 & $6.24\times10^{-272}$ & 0.919 \\
+\end{longtable}
+}

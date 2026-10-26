@@ -1,0 +1,125 @@
+record_id,year,type,venue,decision,reason
+10.1145/3714465,2025,article,ACM Transactions on Software Engineering and Methodology,include,runtime survey (Cluster A)
+10.1145/3736169,2025,article,ACM Transactions on Architecture and Code Optimization,include,embedded runtime benchmarking (Cluster A)
+10.1109/saner64311.2025.00078,2025,conference-paper,IEEE SANER,include,runtime performance testing (Cluster C)
+10.1109/access.2026.3733354,2026,article,IEEE Access,include,runtime taxonomy and energy evaluation (Cluster A)
+10.1109/giis59465.2024.10449907,2024,conference-paper,IEEE GIIS,include,runtime overhead for AI workloads (Cluster A)
+10.1109/ccgrid59990.2024.00046,2024,conference-paper,IEEE CCGrid,include,cross-architecture runtime evaluation (Cluster A)
+10.5220/0013203200003950,2025,conference-paper,SCITEPRESS CLOSER,include,multiplatform and container comparison (Cluster A)
+10.1109/sse62657.2024.00054,2024,conference-paper,IEEE SSE,include,WASI performance analysis (Cluster D)
+10.1145/3700875,2024,review,ACM Computing Surveys,include,serverless cold-start survey (Cluster A)
+10.1109/mic.2024.3513035,2024,article,IEEE Internet Computing,include,Wasm FaaS benchmark (Cluster A)
+10.1109/ic2e61754.2024.00022,2024,conference-paper,IEEE IC2E,include,sandbox footprint and cold start (Cluster B)
+10.1145/3759426.3760985,2025,conference-paper,ACM,include,AOT instrumentation and checkpoint overhead (Cluster C)
+10.1109/noms57970.2025.11073737,2025,conference-paper,IEEE NOMS,include,WASI device interface overhead (Cluster D)
+10.1145/3760387,2025,article,ACM Transactions on Embedded Computing Systems,include,WASI device I/O latency (Cluster D)
+10.1109/cgo68049.2026.11395208,2026,conference-paper,IEEE/ACM CGO,include,compiler back-end latency (Cluster C)
+10.1145/3795882,2026,article,ACM Transactions on Architecture and Code Optimization,include,WASI isolation and syscall cost (Cluster B)
+10.14722/ndss.2025.230746,2025,conference-paper,NDSS,include,Wasm memory virtualization (Cluster B)
+10.14722/ndss.2025.230035,2025,conference-paper,NDSS,include,memory leakage protection (Cluster B)
+10.1109/tetc.2024.3409817,2024,article,IEEE TETC,include,multi-tenant Wasm runtime (Cluster B)
+10.1145/3696443.3708920,2025,conference-paper,ACM/IEEE CGO,include,hardware-assisted memory safety (Cluster B)
+10.1145/3689031.3717470,2025,conference-paper,EuroSys,include,thin kernel interfaces (Cluster D)
+10.1109/ipdpsw66978.2025.00166,2025,conference-paper,IEEE IPDPSW,include,container memory footprint (Cluster D)
+10.1109/icccbda64898.2025.11030528,2025,conference-paper,IEEE ICCCBDA,include,Wasm versus containers (Cluster D)
+10.1145/3731545.3736817,2025,conference-paper,ACM HPDC,include,ML workloads across languages (Cluster A)
+10.1145/3736731.3746150,2025,conference-paper,ACM,include,benchmark reproducibility definitions (Cluster E)
+10.1016/j.cosrev.2024.100655,2024,article,Computer Science Review,include,reproducibility survey (Cluster E)
+10.1007/s10845-025-02672-8,2025,article,Journal of Intelligent Manufacturing,include,statistical comparison of benchmarks (Cluster E)
+10.1016/j.cosrev.2025.100728,2025,article,Computer Science Review,include,security review (Cluster B)
+10.4230/lipics.ecrts.2025.8,2025,article,LIPIcs ECRTS,exclude,"metadata not registered with Crossref; not verifiable, so not cited"
+10.7256/2454-0714.2025.2.74049,2025,article,Software Systems and Computational Methods (Russian),exclude,venue outside indexed databases; topic relevant
+10.22399/ijcesen.4130,2025,article,IJCESEN,exclude,venue outside indexed databases
+10.47852/bonviewaaes52024965,2025,article,Archives of Advanced Engineering Science,exclude,venue outside indexed databases
+10.25258/ijddt.16.54s.58,2026,article,International Journal of Drug Delivery Technology,exclude,venue unrelated to computing
+10.56201/ijcsmt.vol.11.no12.2025.pg232.263,2026,article,IJCSMT,exclude,venue outside indexed databases; review
+10.31649/vitce/2.2026.121,2026,article,Information Technology and Computer Engineering,exclude,venue outside indexed databases
+10.30574/ijsra.2024.11.1.0093,2024,article,IJSRA,exclude,venue outside indexed databases
+10.37745/ejcsit.2013/vol13n38114,2025,article,EJCSIT,exclude,venue outside indexed databases
+10.30970/eli.32.10,2025,article,Electronics and Information Technologies,exclude,venue outside indexed databases
+10.3390/fi16090341,2024,article,Future Internet (MDPI),exclude,publisher outside the policy list
+10.3390/a18100653,2025,review,Algorithms (MDPI),exclude,publisher outside the policy list; not Wasm
+10.1145/3676288.3676305,2024,conference-paper,ACM SSDBM,exclude,relevance: query processing
+10.1016/j.cose.2024.103731,2024,article,Computers and Security,exclude,relevance: software diversification
+10.1109/sp54263.2024.00175,2024,conference-paper,IEEE S&P,exclude,relevance: blockchain rollups
+10.1109/acai68217.2025.11406310,2025,conference-paper,ACAI,exclude,relevance: agent threat model
+10.1007/978-3-032-32726-0_29,2026,conference-paper,Springer LNNS,exclude,relevance: model context protocol
+10.1016/j.sysarc.2026.103926,2026,article,Journal of Systems Architecture,exclude,abstract not retrieved; not evaluated
+10.4230/dagrep.15.6.51,2026,report,Dagstuhl report,exclude,seminar report
+10.48550/arxiv.2602.05488,2026,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2411.03344,2024,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2608.02361,2026,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2609.39631,2026,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2601.14555,2026,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2605.26298,2026,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2605.24569,2026,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2603.29289,2026,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2501.10711,2025,preprint,arXiv,exclude,preprint
+10.48550/arxiv.2608.12635,2026,preprint,arXiv,exclude,preprint
+10.21203/rs.3.rs-11278268/v1,2026,preprint,Research Square,exclude,preprint
+10.5281/zenodo.20457103,2026,article,Zenodo,exclude,non-peer-reviewed repository
+10.5281/zenodo.22876750,2026,article,Zenodo,exclude,non-peer-reviewed repository
+10.5281/zenodo.18955536,2026,article,Zenodo,exclude,non-peer-reviewed repository
+10.46299/isg.p.2026.1.13,2026,conference-paper,ISG proceedings,exclude,relevance: agronomy
+10.46299/isg.2026.1.13,2026,paratext,ISG proceedings,exclude,paratext
+10.35662/unine-thesis-3199,2024,dissertation,University of Neuchatel,exclude,dissertation
+W7165724289,2026,dissertation,Aalto University,exclude,dissertation
+W7133583802,2026,dissertation,University of Luxembourg,exclude,dissertation
+W7202364107,2026,dissertation,Edinburgh,exclude,dissertation
+W7204020442,2026,dissertation,Aalto University,exclude,dissertation
+W7132978352,2025,dissertation,Tampere University,exclude,dissertation
+W7135452379,2026,dissertation,KTH,exclude,dissertation
+W7204014423,2026,dissertation,Aalto University,exclude,dissertation
+W7163303919,2026,dissertation,Theseus,exclude,dissertation
+W7215434315,2026,article,Borneo International Journal,exclude,venue outside indexed databases
+W7201873790,2026,article,Information Technology and Computer Engineering,exclude,venue outside indexed databases
+W7124292335,2025,article,Electronics and Information Technologies,exclude,venue outside indexed databases
+W7143338048,2026,conference-paper,ISG,exclude,relevance: agronomy
+W7215109950,2026,preprint,arXiv,exclude,preprint
+W7125368965,2026,preprint,arXiv,exclude,preprint
+W7114797566,2026,conference-paper,Springer LNNS,exclude,relevance
+W7162547655,2026,preprint,arXiv,exclude,preprint
+W7109936737,2025,article,LIPIcs ECRTS,exclude,"metadata not registered with Crossref; not verifiable, so not cited"
+W7129542772,2026,article,Dagstuhl report,exclude,seminar report
+W7221522893,2026,article,IJCSMT,exclude,venue outside indexed databases
+W7213882736,2026,article,Zenodo,exclude,non-peer-reviewed repository
+W7168342457,2026,article,Journal of Systems Architecture,exclude,abstract not retrieved; not evaluated
+W7134960984,2026,article,Zenodo,exclude,non-peer-reviewed repository
+W7131076106,2026,article,ACM TACO,include,duplicate record of 10.1145/3795882
+W4415002715,2025,conference-paper,ACM,include,duplicate record of 10.1145/3759426.3760985
+W4404354525,2024,preprint,arXiv,exclude,preprint
+W4410518907,2025,article,ACM TACO,include,duplicate record of 10.1145/3736169
+W7131102593,2026,conference-paper,IEEE/ACM CGO,include,duplicate record of 10.1109/cgo68049.2026.11395208
+W4413830761,2025,article,ACM TECS,include,duplicate record of 10.1145/3760387
+W4412446082,2025,conference-paper,IEEE NOMS,include,duplicate record of 10.1109/noms57970.2025.11073737
+W4408749981,2025,conference-paper,NDSS,include,duplicate record of 10.14722/ndss.2025.230746
+W4408750010,2025,conference-paper,NDSS,include,duplicate record of 10.14722/ndss.2025.230035
+W4408870783,2025,conference-paper,EuroSys,include,duplicate record of 10.1145/3689031.3717470
+W4413155819,2025,conference-paper,IEEE IPDPSW,include,duplicate record of 10.1109/ipdpsw66978.2025.00166
+W4411485013,2025,conference-paper,IEEE ICCCBDA,include,duplicate record of 10.1109/icccbda64898.2025.11030528
+W4414210095,2025,conference-paper,ACM HPDC,include,duplicate record of 10.1145/3731545.3736817
+W4415381540,2025,conference-paper,ACM,include,duplicate record of 10.1145/3736731.3746150
+W4391740237,2024,article,Computer Science Review,include,duplicate record of 10.1016/j.cosrev.2024.100655
+W4414040324,2025,article,Journal of Intelligent Manufacturing,include,duplicate record of 10.1007/s10845-025-02672-8
+W4402595446,2024,conference-paper,IEEE SSE,include,duplicate record of 10.1109/sse62657.2024.00054
+W4410552974,2025,conference-paper,IEEE SANER,include,duplicate record of 10.1109/saner64311.2025.00078
+W4406738193,2025,article,TOSEM,include,duplicate record of 10.1145/3714465
+W4403489759,2024,review,ACM Computing Surveys,include,duplicate record of 10.1145/3700875
+W4405219581,2024,article,IEEE Internet Computing,include,duplicate record of 10.1109/mic.2024.3513035
+W4404371602,2024,conference-paper,IEEE IC2E,include,duplicate record of 10.1109/ic2e61754.2024.00022
+W4402263662,2024,conference-paper,IEEE S&P,exclude,duplicate record of 10.1109/sp54263.2024.00175
+W4401852864,2024,conference-paper,ACM SSDBM,exclude,duplicate record of 10.1145/3676288.3676305
+W4391069661,2024,article,Computers and Security,exclude,duplicate record of 10.1016/j.cose.2024.103731
+W4392361635,2024,conference-paper,IEEE GIIS,include,duplicate record of 10.1109/giis59465.2024.10449907
+W4415258436,2025,article,IJCESEN,exclude,duplicate record of 10.22399/ijcesen.4130
+W4409371825,2025,article,Archives of Advanced Engineering Science,exclude,duplicate record of 10.47852/bonviewaaes52024965
+W4409574909,2025,article,Software Systems and Computational Methods,exclude,duplicate record of 10.7256/2454-0714.2025.2.74049
+W4409922550,2025,article,Laboratory Investigation,exclude,relevance: pathology
+W4406703766,2025,preprint,arXiv,exclude,duplicate record of 10.48550/arxiv.2501.10711
+W7162418263,2026,preprint,arXiv,exclude,preprint
+W7147522859,2026,preprint,arXiv,exclude,preprint
+W7162858933,2026,article,Zenodo,exclude,non-peer-reviewed repository
+W4415299510,2025,review,Algorithms (MDPI),exclude,duplicate record of 10.3390/a18100653
+W4414351995,2024,article,IJSRA,exclude,duplicate record of 10.30574/ijsra.2024.11.1.0093
+W4415788649,2024,dissertation,University of Neuchatel,exclude,duplicate record of 10.35662/unine-thesis-3199
+W7172404027,2026,preprint,arXiv,exclude,preprint

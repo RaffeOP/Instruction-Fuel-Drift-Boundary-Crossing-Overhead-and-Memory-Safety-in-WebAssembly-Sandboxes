@@ -1,0 +1,17 @@
+\begin{table}[t]
+\caption{Lifecycle latency and memory growth by harness and allocator. Latencies are in microseconds, computed over the 120,000 lifecycles of each series. For the Rust allocators, the median column is the median of the five per-repeat medians, the range column gives the smallest and largest repeat median, and the percentile columns are medians of the per-repeat values. The slope is the USS growth rate from Table~\ref{tab:rq4_slopes}.}\label{tab:rq4_latency}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrrrr}
+\toprule
+Condition & Repeats & Median & Repeat range & 95th & 99th & Slope (B/lifecycle) \\
+\midrule
+Python, default reservation & 1 & 35.2 & --- & 39.2 & 42.0 & 8.21 \\
+Python, no growth reservation & 1 & 35.6 & --- & 39.7 & 42.5 & 0.19 \\
+Rust, on-demand allocation & 5 & 12.0 & 11.8--12.1 & 14.1 & 19.3 & 9.14 \\
+Rust, pooled allocation & 5 & 12.9 & 12.8--13.0 & 15.0 & 20.1 & 8.99 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

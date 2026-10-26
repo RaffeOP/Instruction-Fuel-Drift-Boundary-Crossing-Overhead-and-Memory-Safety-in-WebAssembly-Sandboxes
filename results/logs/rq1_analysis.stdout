@@ -1,0 +1,34 @@
+{
+  "runtimes": [
+    "v8",
+    "wamr-interp",
+    "wasmedge-interp",
+    "wasmer-cranelift",
+    "wasmer-llvm",
+    "wasmer-singlepass",
+    "wasmtime-cranelift",
+    "wasmtime-winch"
+  ],
+  "runs": 104600,
+  "checksum_agreement": {
+    "cells": 200,
+    "cells_with_disagreement": 0
+  },
+  "a_adv": {
+    "wasmtime-cranelift": {
+      "cells": 200,
+      "a_adv": 34.97208384067316,
+      "psi_cv": 0.9307193615601196
+    },
+    "wasmtime-winch": {
+      "cells": 200,
+      "a_adv": 10.145919193815764,
+      "psi_cv": 0.5576545282732958
+    },
+    "wasmedge-interp": {
+      "cells": 200,
+      "a_adv": 2.3414488835799805,
+      "psi_cv": 0.19679853967919306
+    }
+  }
+}
