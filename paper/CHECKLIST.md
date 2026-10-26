@@ -21,7 +21,7 @@ Target journal: *Cluster Computing* (Springer Nature, hybrid). Template: `sn-jnl
 - [x] Load-telemetry caveat disclosed in threats section and in Appendix (load telemetry); runtime-ratio claim scoped to within-replicate time-sharing.
 - [x] Official Springer bibliography style: complete official Springer Nature `.bst` bundle installed in `paper/` (`sn-mathphys.bst`, `sn-basic.bst`, `sn-aps.bst`, `sn-nature.bst`, `sn-vancouver.bst`, `sn-chicago.bst`, `sn-apacite.bst`). Numbered citation format verified (`[1]`, `[2]`).
 - [x] Journal requirements for *Cluster Computing*: verified hybrid model ($0 APC under traditional subscription), single-blind review format, standard Springer declarations, and numbered reference style.
-- [x] Repository URL, DOI, and License placeholders filled: `https://github.com/RaffeOP/papers/tree/main/R3`, Zenodo archive DOI `10.5281/zenodo.14920267`, and MIT License.
+- [x] Repository URL and License placeholders filled: `https://github.com/RaffeOP/Instruction-Fuel-Drift-Boundary-Crossing-Overhead-and-Memory-Safety-in-WebAssembly-Sandboxes` and MIT License.
 - [x] Line-by-line copy-edit completed across all sections and appendices with clean typography and no bad breaks.
 
 ## Key Journal & Editorial Decisions
@@ -30,4 +30,4 @@ Target journal: *Cluster Computing* (Springer Nature, hybrid). Template: `sn-jnl
 - **Publishing model:** Traditional subscription model ($0 APC / no author fees required; optional Open Choice CC-BY available if funded).
 - **Reference style:** Numbered style (`sn-mathphys.bst` with `natbib` numbers), sorted sequentially by order of citation in the text with complete DOIs.
 - **Author details:** Single-blind peer review with author name, institution (SCOPE, VIT Vellore), and corresponding author email included on title page.
-- **Reproducibility deposit:** All raw traces, manifests, harnesses, figures, and LaTeX tables linked to `https://github.com/RaffeOP/papers/tree/main/R3` under MIT License with Zenodo archival deposit.
+- **Reproducibility deposit:** All raw traces, manifests, harnesses, figures, and LaTeX tables linked to `https://github.com/RaffeOP/Instruction-Fuel-Drift-Boundary-Crossing-Overhead-and-Memory-Safety-in-WebAssembly-Sandboxes` under MIT License.
