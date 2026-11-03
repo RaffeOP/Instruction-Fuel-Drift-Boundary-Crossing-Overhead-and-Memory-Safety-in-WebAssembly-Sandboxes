@@ -1,20 +1,19 @@
 \begin{table}[t]
-\centering
-\caption{Affine fits $T(s)=\alpha+\beta s$ with OLS 95\% half-widths. Host rows: per-call latency of the Wasmtime host-function boundary and the native copy-and-validate baseline, 64\,B to 16\,MiB. WASI rows: per-write cost of a stdout write to \texttt{/dev/null} (instantiation subtracted), 64\,B to 16\,MiB payloads. Host rows were sampled under a per-sample load gate of 4 (1-minute load median 3.4, maximum 5.5); the load-filtered rows drop the 13 wasm and 3 native samples above 4.}
-\label{tab:hostfit}
+\caption{RQ3 cost models from the gated rerun, Wasmtime 50.0.0 embedded in Rust. The transition row is the mean per-call cost of an import that does no host work, with a 95\% $t$ interval over replicates. The other rows are OLS fits $T(s)=\alpha+\beta s$ in ns and ns per byte with 95\% half-widths, fitted separately below and above the cache-capacity range because one line does not fit both. WASI rows are per-write costs to \texttt{/dev/null} with instantiation subtracted.}\label{tab:hostfit}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
 \begin{adjustbox}{max width=\textwidth}%
-\begin{tabular}{llrrrr}
+\begin{tabular}{lrrrr}
 \toprule
-Sample & Side & n & $\alpha$ (ns) & $\beta$ (ns/B) & $R^2$ \\
+Model & $n$ & $\alpha$ (ns) & $\beta$ (ns/B) & $R^2$ \\
 \midrule
-all samples & wasm & 6482 & -8765 $\pm$ 2249 & 0.1366 $\pm$ 0.0003 & 0.989 \\
-all samples & native & 6482 & 22480 $\pm$ 2497 & 0.0879 $\pm$ 0.0004 & 0.969 \\
-load $<4$ & wasm & 6469 & -8813 $\pm$ 2253 & 0.1366 $\pm$ 0.0003 & 0.989 \\
-load $<4$ & native & 6479 & 22463 $\pm$ 2497 & 0.0879 $\pm$ 0.0004 & 0.969 \\
-Small payloads ($64$\,B to $16$\,KiB) & Wasm host call & 2778 & 5786 $\pm$ 48 & 0.0819 $\pm$ 0.0051 & 0.265 \\
-Small payloads ($64$\,B to $16$\,KiB) & Native baseline & 2778 & 123 $\pm$ 2 & 0.0623 $\pm$ 0.0002 & 0.990 \\
-WASI write, all sizes & WASI Preview 1 & 3241 & 121 $\pm$ 1190 & 0.2787 $\pm$ 0.0002 & 1.000 \\
-WASI write, all sizes & WASI Preview 2 & 3241 & -1716 $\pm$ 1048 & 0.1798 $\pm$ 0.0002 & 0.999 \\
+Host-call transition (null import) & --- & $2.6 \pm 0.0$ & --- & --- \\
+Host call, 64\,B--16\,KiB & 1000 & $42 \pm 0$ & $0.0313 \pm 0.0001$ & 0.999 \\
+Host call, 256\,KiB--16\,MiB & 800 & $-13872 \pm 1607$ & $0.0401 \pm 0.0002$ & 0.996 \\
+Native baseline, 64\,B--16\,KiB & 1000 & $21 \pm 0$ & $0.0301 \pm 0.0000$ & 0.999 \\
+Native baseline, 256\,KiB--16\,MiB & 800 & $-13990 \pm 2587$ & $0.0402 \pm 0.0003$ & 0.989 \\
+WASI Preview 1 write, 64\,B--16\,MiB & 3241 & $71 \pm 1227$ & $0.2784 \pm 0.0002$ & 1.000 \\
+WASI Preview 2 write, 64\,B--16\,MiB & 3241 & $-1350 \pm 1034$ & $0.1780 \pm 0.0002$ & 0.999 \\
 \bottomrule
 \end{tabular}%
 \end{adjustbox}

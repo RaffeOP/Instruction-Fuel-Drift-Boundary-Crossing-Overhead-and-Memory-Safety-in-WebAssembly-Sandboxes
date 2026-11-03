@@ -1,0 +1,161 @@
+{
+  "summary": [
+    {
+      "backend": "cranelift",
+      "family": "corpus",
+      "policy": "fuel",
+      "runs": 1000,
+      "median": 0.085145,
+      "p99": 5.738091899999981,
+      "max": 9.25269,
+      "censored": 0,
+      "under_budget": 0.431
+    },
+    {
+      "backend": "cranelift",
+      "family": "corpus",
+      "policy": "time",
+      "runs": 1000,
+      "median": 0.02914,
+      "p99": 0.0625404,
+      "max": 0.06334,
+      "censored": 0,
+      "under_budget": 0.0
+    },
+    {
+      "backend": "cranelift",
+      "family": "corpus",
+      "policy": "dual",
+      "runs": 1000,
+      "median": 0.00675,
+      "p99": 0.060680599999999994,
+      "max": 0.06294,
+      "censored": 0,
+      "under_budget": 0.429
+    },
+    {
+      "backend": "cranelift",
+      "family": "serverless",
+      "policy": "fuel",
+      "runs": 100,
+      "median": 0.12995,
+      "p99": 1.0851119000000014,
+      "max": 1.33973,
+      "censored": 0,
+      "under_budget": 0.11
+    },
+    {
+      "backend": "cranelift",
+      "family": "serverless",
+      "policy": "time",
+      "runs": 100,
+      "median": 0.041855,
+      "p99": 0.05927420000000002,
+      "max": 0.06266,
+      "censored": 0,
+      "under_budget": 0.0
+    },
+    {
+      "backend": "cranelift",
+      "family": "serverless",
+      "policy": "dual",
+      "runs": 100,
+      "median": 0.026189999999999998,
+      "p99": 0.062170600000000006,
+      "max": 0.06223,
+      "censored": 0,
+      "under_budget": 0.1
+    },
+    {
+      "backend": "cranelift",
+      "family": "adversarial",
+      "policy": "fuel",
+      "runs": 195,
+      "median": 9.57701,
+      "p99": 49.059737,
+      "max": 49.06125,
+      "censored": 50,
+      "under_budget": 0.1794871794871795
+    },
+    {
+      "backend": "cranelift",
+      "family": "adversarial",
+      "policy": "time",
+      "runs": 195,
+      "median": 0.03254,
+      "p99": 0.0612298,
+      "max": 0.06238,
+      "censored": 0,
+      "under_budget": 0.0
+    },
+    {
+      "backend": "cranelift",
+      "family": "adversarial",
+      "policy": "dual",
+      "runs": 195,
+      "median": 0.02453,
+      "p99": 0.0616498,
+      "max": 0.06202,
+      "censored": 0,
+      "under_budget": 0.1794871794871795
+    },
+    {
+      "backend": "winch",
+      "family": "adversarial",
+      "policy": "fuel",
+      "runs": 195,
+      "median": 24.35561,
+      "p99": 49.060882,
+      "max": 49.06253,
+      "censored": 80,
+      "under_budget": 0.0
+    },
+    {
+      "backend": "winch",
+      "family": "adversarial",
+      "policy": "time",
+      "runs": 195,
+      "median": 0.03454,
+      "p99": 0.062387,
+      "max": 0.06301,
+      "censored": 0,
+      "under_budget": 0.0
+    },
+    {
+      "backend": "winch",
+      "family": "adversarial",
+      "policy": "dual",
+      "runs": 195,
+      "median": 0.03385,
+      "p99": 0.0602884,
+      "max": 0.06163,
+      "censored": 0,
+      "under_budget": 0.0
+    }
+  ],
+  "overhead": {
+    "cells": 200,
+    "geomean": 1.0676854918742533,
+    "ci_low": 1.0405805326941941,
+    "ci_high": 1.0954964788811552,
+    "median": 1.048855,
+    "p95": 1.3982444999999988,
+    "max": 1.98995
+  },
+  "probe": {
+    "max": 0.3715,
+    "median": -0.025679999999999994
+  },
+  "ticks": {
+    "quota_tick_10000us": {
+      "median": 0.19498,
+      "p99": 0.5794976,
+      "max": 0.59525
+    },
+    "quota_tick_100us": {
+      "median": 0.0039,
+      "p99": 0.00686,
+      "max": 0.01003
+    }
+  }
+}

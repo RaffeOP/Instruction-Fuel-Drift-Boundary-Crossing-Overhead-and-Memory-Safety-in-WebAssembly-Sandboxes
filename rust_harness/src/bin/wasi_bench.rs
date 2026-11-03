@@ -14,6 +14,18 @@ use wasmtime::{Config, Engine, Linker, Module, Store};
 use wasmtime_wasi::p1::WasiP1Ctx;
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxView, WasiView};
 
+extern "C" {
+    fn getloadavg(loads: *mut std::os::raw::c_double, count: std::os::raw::c_int) -> std::os::raw::c_int;
+}
+
+/// The 1-minute load average, sampled before each measurement.
+fn load1() -> f64 {
+    let mut loads = [0.0f64; 3];
+    // SAFETY: the buffer holds three doubles.
+    unsafe { getloadavg(loads.as_mut_ptr(), 3) };
+    loads[0]
+}
+
 const WRITE_BUDGET_BYTES: u64 = 200_000_000;
 const MIN_WRITES: u64 = 10;
 const MAX_WRITES: u64 = 20_000;
@@ -125,8 +137,13 @@ fn main() {
     }
 
     let mut out = File::create(&options.out).expect("out");
-    writeln!(out, "side,payload_bytes,writes,mode,replicate,cpu_ns,wall_ns").unwrap();
+    writeln!(out, "side,payload_bytes,writes,mode,replicate,cpu_ns,wall_ns,loadavg_1m").unwrap();
     for (side, size, full, replicate) in plan {
+        let mut load = load1();
+        while load > 2.95 {
+            std::thread::sleep(std::time::Duration::from_millis(200));
+            load = load1();
+        }
         let writes = if full { writes_for(size) } else { 0 };
         let (cpu, wall) = match side {
             "preview1" => timed(|| run_preview1(&engine, &options.p1, size, writes)),
@@ -134,7 +151,7 @@ fn main() {
         };
         writeln!(
             out,
-            "{side},{size},{writes},{},{replicate},{cpu},{wall}",
+            "{side},{size},{writes},{},{replicate},{cpu},{wall},{load:.2}",
             if full { "full" } else { "baseline" }
         )
         .unwrap();

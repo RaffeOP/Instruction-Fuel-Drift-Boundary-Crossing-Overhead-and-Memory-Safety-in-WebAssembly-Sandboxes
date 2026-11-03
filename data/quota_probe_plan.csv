@@ -1,0 +1,2 @@
+kernel,group,opt_level,path,reps
+adv_bulk_copy_256M_single,adv_bulk,wat,/Users/raffe/Documents/GitHub/papers/R3/kernels/adversarial/adv_bulk_copy_256M_single.wat,1

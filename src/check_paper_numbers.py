@@ -31,51 +31,59 @@ def per_write_medians(wasi: pd.DataFrame) -> pd.DataFrame:
     return full.reset_index().groupby(["payload_bytes", "side"]).per_write_ns.median().unstack("side")
 
 
+def pmu_cells(path: Path) -> pd.DataFrame:
+    runs = pd.read_csv(path)
+    cells = runs.groupby(["kernel", "opt_level"]).agg(cpu=("cpu_ns", "mean"), fuel=("fuel", "first")).reset_index()
+    cells["psi"] = cells.cpu / cells.fuel
+    return cells
+
+
+def adversarial_psi(backend: str) -> pd.Series:
+    runs = pd.read_csv(DATA / "pmu" / f"pmu_adversarial_{backend}.csv")
+    cells = runs.groupby("kernel").agg(cpu=("cpu_ns", "mean"), fuel=("fuel", "first"))
+    return cells.cpu / cells.fuel
+
+
 def claims() -> list:
     headline = json.loads((METRICS / "rq1_headline.json").read_text())
     cells = cranelift_cells()
-    psi = cells.t / cells.fuel
     fuel = pd.read_csv(DATA / "rq1_wasmtime-cranelift.csv").groupby(["opt_level", "kernel"]).fuel.first().unstack("opt_level")
     winch = pd.read_csv(DATA / "rq1_wasmtime-winch.csv").groupby(["opt_level", "kernel"]).fuel.first()
     cran = pd.read_csv(DATA / "rq1_wasmtime-cranelift.csv").groupby(["opt_level", "kernel"]).fuel.first()
     rel = ((winch - cran).abs() / cran)
-    dyn = pd.read_csv(DATA / "dynamic_opcode_mix.csv")
-    dyn = cells[["opt_level", "kernel"]].merge(dyn, on=["opt_level", "kernel"])
-    dyn_total = dyn[CLASS_COLUMNS].sum(axis=1).to_numpy(float)
-    fuel_matched = cells.fuel.to_numpy(float)
+    flat = pd.read_csv(DATA / "pmu" / "fuel_cranelift_flatbulk.csv").groupby(["opt_level", "kernel"]).fuel.first()
     ratios = pd.read_csv(METRICS / "rq1_runtime_ratios.csv").set_index("runtime")
-    host = pd.read_csv(DATA / "rq3_host_call_latency.csv")
-    host_med = host.groupby(["side", "payload_bytes"]).per_call_ns.median().unstack("side")
-    wasi = per_write_medians(pd.read_csv(DATA / "rq3_wasi_p1_p2.csv"))
-    alloc = pd.read_csv(DATA / "rq4_allocation_strategy_uss.csv")
-    dynloo = pd.read_csv(METRICS / "rq5_dynamic_loo.csv")
-    loop = pd.read_csv(METRICS / "rq5_loop_weighted_loo.csv")
-    loop = loop[loop["model"] == "loop-weighted static opcodes"]
-
-    def slope_mean(condition: str) -> float:
-        rows = alloc[alloc.condition == condition]
-        return float(np.mean([stats.linregress(g.lifecycle, g.private_anonymous_bytes).slope
-                              for _, g in rows.groupby("repeat")]))
-
+    pmu = pmu_cells(DATA / "pmu" / "pmu_corpus_cranelift.csv")
+    adv = adversarial_psi("cranelift")
+    adv_w = adversarial_psi("winch")
+    winch_pmu = pmu_cells(DATA / "pmu" / "pmu_corpus_winch.csv")
+    calib = pd.read_csv(METRICS / "calibration_v2.csv").set_index(["features", "split"])
+    slopes = pd.read_csv(METRICS / "rq4_buffer_attribution_slopes.csv")
+    paired = slopes.pivot_table(index=["mode", "dirty_pages", "repeat"], columns="prefault",
+                                values="slope_bytes_per_lifecycle")
+    host = pd.read_csv(DATA / "r4" / "rq3_host_call_rust.csv", keep_default_na=False)
+    host_med = host[host.side != "null"].groupby(["payload_bytes", "side"]).per_call_ns.median().unstack("side")
+    compound = pd.read_csv(DATA / "r4" / "rq2_compound.csv")
     return [
-        ("A_adv Cranelift", f"{headline['a_adv']['wasmtime-cranelift']['a_adv']:.1f}", "=40.8$"),
-        ("robust p95/p5 Cranelift", f"{psi.quantile(.95) / psi.quantile(.05):.1f}", "$8.9$"),
+        ("A_adv Cranelift, cross-runtime rerun", f"{headline['a_adv']['wasmtime-cranelift']['a_adv']:.1f}", "=38.3$"),
+        ("A_adv Cranelift, kperf run", f"{pmu.psi.max() / pmu.psi.min():.1f}", "$34.1$"),
         ("fuel O0/O2 min", f"{(fuel.O0 / fuel.O2).min():.2f}", "$0.36$"),
         ("fuel O0/O2 max", f"{(fuel.O0 / fuel.O2).max():.1f}", "$6.5$"),
-        ("Winch disagreement cells above noise", str(int((rel > 1e-6).sum())), "20 cells above numerical noise"),
-        ("r(time, fuel)", f"{np.corrcoef(cells.t, fuel_matched)[0, 1]:.2f}", "$r=0.73$"),
-        ("dynamic total vs fuel r", f"{np.corrcoef(dyn_total, fuel_matched)[0, 1]:.4f}", "$0.9999$"),
-        ("dynamic total / fuel median", f"{np.median(dyn_total / fuel_matched):.4f}", "$1.0003$"),
-        ("WasmEdge interpreter ratio", f"{ratios.loc['wasmedge-interp', 'ratio_median']:.0f}", "$81$"),
-        ("Winch ratio", f"{ratios.loc['wasmtime-winch', 'ratio_median']:.2f}", "$2.13$"),
-        ("V8 ratio", f"{ratios.loc['v8', 'ratio_median']:.2f}", "V8 at $0.81$"),
-        ("host ratio at 64 B", f"{host_med.loc[64, 'wasm'] / host_med.loc[64, 'native']:.0f}", "ratio of $61$"),
-        ("Rust on-demand slope", f"{slope_mean('on_demand'):.2f}", "$9.14\\pm0.19$"),
-        ("Rust pooled slope", f"{slope_mean('pooled'):.2f}", "$8.99\\pm0.08$"),
-        ("dynamic classes best lambda=100", f"{dynloo[(dynloo.model == 'dynamic opcode classes') & (dynloo['lambda'] == 100)].cv_psi.iloc[0]:.2f}", "$0.99$ at $\\lambda=100$"),
-        ("loop-weighted best", f"{loop.cv_psi.min():.2f}", "$1.50$"),
-        ("WASI P2/P1 per write at 64 B", f"{wasi.loc[64, 'preview2'] / wasi.loc[64, 'preview1']:.2f}", "$1.11$"),
-        ("WASI P2/P1 per write at 16 KiB", f"{wasi.loc[16384, 'preview2'] / wasi.loc[16384, 'preview1']:.2f}", "$0.68$"),
+        ("Winch disagreement cells above noise", str(int((rel > 1e-6).sum())), "in 20 cells above numerical noise"),
+        ("flat-bulk Cranelift equals Winch in all cells", str(int((flat == winch).sum())), "all 200 cells"),
+        ("r(time, fuel)", f"{np.corrcoef(cells.t, cells.fuel)[0, 1]:.2f}", "$r=0.73$"),
+        ("Winch time ratio", f"{ratios.loc['wasmtime-winch', 'ratio_median']:.2f}", "Winch is at $2.11$"),
+        ("WasmEdge AOT ratio", f"{ratios.loc['wasmedge-aot', 'ratio_median']:.2f}", "WasmEdge AOT at $0.77$"),
+        ("adversarial max Cranelift", f"{adv.max():.1f}", "$93.8$"),
+        ("adversarial max / benign max", f"{adv.max() / pmu.psi.max():.0f}", "$260$"),
+        ("adversarial max / benign min", f"{adv.max() / pmu.psi.min():,.0f}".replace(",", "{,}"), "$8{,}879$"),
+        ("Winch bulk copy 4M psi", f"{adv_w['adv_bulk_copy_4M']:,.0f}".replace(",", "{,}"), "$7{,}518$"),
+        ("Winch bulk / Winch benign max", f"{adv_w['adv_bulk_copy_4M'] / winch_pmu.psi.max():,.0f}".replace(",", "{,}"), "$15{,}673$"),
+        ("LOKO dynamic shares", f"{calib.loc[('dynamic class shares', 'LOKO'), 'log_score']:.3f}", "$0.682$"),
+        ("LOKO PMU + instructions", f"{calib.loc[('PMU event rates + native instructions', 'LOKO'), 'log_score']:.3f}", "$0.551$"),
+        ("RQ4 paired buffer difference", f"{(paired[0] - paired[1]).mean():.2f}", "$8.02$"),
+        ("host call / native at 64 B", f"{host_med.loc[64, 'wasm'] / host_med.loc[64, 'native']:.2f}", "$2.10$ times"),
+        ("compound trials conforming", str(int(compound.conforms.sum())), "All 4{,}200 trials conform"),
     ]
 
 

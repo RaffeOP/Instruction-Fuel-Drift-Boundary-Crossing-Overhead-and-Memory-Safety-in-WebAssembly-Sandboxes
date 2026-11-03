@@ -1,0 +1,21 @@
+experiment,unit,n,median,p95,max,above_gate
+"Wasmtime Cranelift, kperf corpus",replicate,20000,2.79,3.0,4.59,0.0265
+"Wasmtime Winch, kperf corpus",replicate,20000,2.56,2.99,3.76,0.03795
+"Adversarial search, Cranelift",replicate,1170,2.84,2.93,3.09,0.010256410256410256
+"Adversarial search, Winch",replicate,1170,2.71,2.94,2.94,0.0
+"Serverless kernels, Cranelift",replicate,2000,2.07,2.51,2.51,0.0
+"Serverless kernels, Winch",replicate,2000,2.52,2.78,3.02,0.023
+Host-call boundary (Rust),replicate,4200,2.8,2.82,2.82,0.0
+WASI Preview 1 / Preview 2,replicate,12964,2.83,2.94,2.94,0.0
+"wasmtime-cranelift, cell windows",cell,200,2.77,4.75,6.45,0.31
+"wasmtime-winch, cell windows",cell,200,2.7,4.2325,5.21,0.225
+"wasmer-cranelift, cell windows",cell,200,2.58,3.5769999999999973,4.39,0.225
+"wasmer-llvm, cell windows",cell,200,2.6550000000000002,3.614999999999998,4.93,0.34
+"wasmer-singlepass, cell windows",cell,200,2.5149999999999997,7.77,8.59,0.305
+"wasmer-cranelift-metered, cell windows",cell,200,2.12,3.805499999999998,4.99,0.085
+"wasmer-llvm-metered, cell windows",cell,200,2.3,3.1729999999999987,3.45,0.105
+"wasmer-singlepass-metered, cell windows",cell,200,2.17,2.49,2.55,0.0
+"wamr-interp, cell windows",cell,200,2.22,2.722999999999999,5.01,0.035
+"wasmedge-aot, cell windows",cell,200,2.08,2.2519999999999993,2.57,0.0
+"v8, step window",2-s sample,202,2.48,3.8,4.57,0.32673267326732675
+"wasmedge-interp, cell windows",cell,200,2.8499999999999996,3.935999999999998,27.34,0.385

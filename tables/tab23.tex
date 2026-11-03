@@ -1,0 +1,22 @@
+\begin{table}[t]
+\caption{Compound and concurrent linear-memory trials. Each compound trial is a seeded sequence of 40 operations on one instance (grows including past the declared maximum of 1{,}024 pages, loads and stores near the end and at high addresses, and \texttt{memory.fill} and \texttt{memory.copy} straddling the end), checked step by step against a shadow copy of memory; the same 600 sequences run under every configuration. Must-fail steps are those the specification requires to trap or, for grows, to return $-1$. The lower bound is the exact 95\% Clopper--Pearson bound on trial conformance. The pooling row counts instantiation attempts by eight threads that each try to hold 16 tenants on a 64-slot pool.}\label{tab:rq2_compound}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrrr}
+\toprule
+Configuration & Trials & Steps & Must-fail steps & Conforming & Lower bound \\
+\midrule
+\texttt{default\_2gib\_guard} & 600 & 24,000 & 13,484 & 600 & 0.9939 \\
+\texttt{reduced\_64kib\_guard} & 600 & 24,000 & 13,484 & 600 & 0.9939 \\
+\texttt{zero\_guard} & 600 & 24,000 & 13,484 & 600 & 0.9939 \\
+\texttt{zero\_guard\_explicit\_checks} & 600 & 24,000 & 13,484 & 600 & 0.9939 \\
+\texttt{no\_growth\_reservation} & 600 & 24,000 & 13,484 & 600 & 0.9939 \\
+\texttt{zero\_guard\_no\_growth\_reservation} & 600 & 24,000 & 13,484 & 600 & 0.9939 \\
+\texttt{pooling\_allocator} & 600 & 24,000 & 13,484 & 600 & 0.9939 \\
+\midrule
+Pooling, 8 threads, 64 slots & 1,600 & \multicolumn{4}{l}{770 admitted, 830 refused with an error, 0 dirty slots, 0 lost patterns, 0 other errors} \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

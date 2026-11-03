@@ -63,6 +63,7 @@ struct Options {
     module: PathBuf,
     latency_out: PathBuf,
     dirty_pages: i32,
+    prefault: bool,
 }
 
 fn parse() -> Result<Options, String> {
@@ -72,6 +73,7 @@ fn parse() -> Result<Options, String> {
     let mut module = None;
     let mut latency_out = None;
     let mut dirty_pages = 4;
+    let mut prefault = false;
     let mut args = std::env::args().skip(1);
     while let Some(flag) = args.next() {
         let value = args.next().ok_or_else(|| format!("missing value for {flag}"))?;
@@ -86,6 +88,7 @@ fn parse() -> Result<Options, String> {
             "--module" => module = Some(PathBuf::from(value)),
             "--latency-out" => latency_out = Some(PathBuf::from(value)),
             "--dirty-pages" => dirty_pages = value.parse().map_err(|e| format!("{e}"))?,
+            "--prefault" => prefault = value != "0",
             other => return Err(format!("unknown flag {other}")),
         }
     }
@@ -96,6 +99,7 @@ fn parse() -> Result<Options, String> {
         module: module.ok_or("--module required")?,
         latency_out: latency_out.ok_or("--latency-out required")?,
         dirty_pages,
+        prefault,
     })
 }
 
@@ -154,11 +158,22 @@ fn main() {
     };
     let engine = build_engine(options.pooled).expect("engine");
     let module = Module::from_file(&engine, &options.module).expect("module");
+    // Without --prefault the latency buffer's pages are first written during the loop, so the
+    // buffer itself adds 8 bytes of private dirty memory per lifecycle to the measured series.
+    // With --prefault every page is written before the first checkpoint.
     let mut latencies: Vec<u64> = Vec::with_capacity(options.lifecycles as usize);
+    if options.prefault {
+        latencies.resize(options.lifecycles as usize, u64::MAX);
+    }
     let stdin = io::stdin();
     let mut acknowledgements = stdin.lock();
     for lifecycle in 0..options.lifecycles {
-        latencies.push(run_lifecycle(&engine, &module, options.dirty_pages));
+        let latency = run_lifecycle(&engine, &module, options.dirty_pages);
+        if options.prefault {
+            latencies[lifecycle as usize] = latency;
+        } else {
+            latencies.push(latency);
+        }
         if lifecycle % options.checkpoint_stride == 0 {
             checkpoint(lifecycle, &mut acknowledgements);
         }

@@ -1,0 +1,19 @@
+\begin{table}[t]
+\caption{Validation of the kperf counters on native microbenchmarks with known counts. The fixed loop retires exactly four instructions per iteration; the branch loop has one data-dependent branch per element on constant or uniformly random bits (half of the random branches are expected to mispredict); the pointer chase follows one random cycle with one pointer per 128-byte line, resident in a 16\,KiB set or spread over 256\,MiB. Rows with an expected count near zero show the residual count.}\label{tab:pmu_validation}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{llrrr}
+\toprule
+Test & Event & Expected & Measured & Ratio \\
+\midrule
+\texttt{fixed\_loop\_4\_per\_iter} & \texttt{FIXED\_INSTRUCTIONS} & 400,000,000 & 400,024,246 & 1.0001 \\
+\texttt{fixed\_loop\_4\_per\_iter} & \texttt{BRANCH\_MISPRED\_NONSPEC} & 1 & 7 & --- \\
+\texttt{branch\_constant} & \texttt{BRANCH\_MISPRED\_NONSPEC} & 0 & 1 & --- \\
+\texttt{branch\_random\_half} & \texttt{BRANCH\_MISPRED\_NONSPEC} & 10,000,000 & 9,998,725 & 0.9999 \\
+\texttt{chase\_16KiB\_resident} & \texttt{L1D\_CACHE\_MISS\_LD\_NONSPEC} & 0 & 291 & --- \\
+\texttt{chase\_256MiB\_random} & \texttt{L1D\_CACHE\_MISS\_LD\_NONSPEC} & 20,000,000 & 19,999,588 & 1.0000 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

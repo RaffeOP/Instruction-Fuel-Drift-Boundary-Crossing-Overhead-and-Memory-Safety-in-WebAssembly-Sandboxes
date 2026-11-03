@@ -11,6 +11,7 @@ from fit_tables_to_width import fit_all
 
 ROOT = Path(__file__).resolve().parent.parent
 CELL_SUMMARY_PATH = ROOT / "results" / "metrics" / "rq1_cell_summary.csv"
+TIMING_PLAN_PATH = ROOT / "data" / "timing_plan.csv"
 RATIO_PATH = ROOT / "results" / "metrics" / "rq1_runtime_ratios.csv"
 RUNTIME_TABLE_PATH = ROOT / "tables" / "tab06.tex"
 BACKEND_TABLE_PATH = ROOT / "tables" / "tab07.tex"
@@ -138,10 +139,13 @@ def write_runtime_table(cells):
 
 
 def read_fuel():
+    """Fuel per repetition of the kernel body, so cells with different reps compare directly."""
+    reps = {(row["opt_level"], row["kernel"]): int(row["reps"]) for row in csv.DictReader(TIMING_PLAN_PATH.open())}
     fuel = {}
     for row in csv.DictReader(CELL_SUMMARY_PATH.open()):
         if row["runtime"] in (CRANELIFT, WINCH):
-            fuel[(row["runtime"], row["opt_level"], row["kernel"])] = float(row["fuel"])
+            key = (row["opt_level"], row["kernel"])
+            fuel[(row["runtime"], *key)] = float(row["fuel"]) / reps[key]
     return fuel
 
 
@@ -181,17 +185,20 @@ def write_backend_table(fuel):
     BACKEND_TABLE_PATH.write_text(
         "\\begin{table}[t]\n"
         "\\caption{Kernels whose Winch and Cranelift fuel differ above numerical noise at "
-        "\\texttt{-O2} and \\texttt{-O3}. Cranelift fuel is in millions of units; the Winch column gives "
+        "\\texttt{-O2} and \\texttt{-O3}. Cranelift fuel is per repetition of the kernel body, in millions of units; the Winch column gives "
         "the signed relative difference $(F_{\\mathrm{Winch}}-F_{\\mathrm{Cranelift}})/F_{\\mathrm{Cranelift}}$. "
-        "These 20 cells are the backend disagreements reported in the text. Every other cell agrees exactly, "
-        "except four \\texttt{pb\\_heat\\_3d} cells that differ by eight fuel units (relative difference "
-        "below $10^{-7}$).}\\label{tab:backend_disagreement}\n"
+        "These 20 cells are the backend disagreements reported in the text; four \\texttt{pb\\_heat\\_3d} cells "
+        "differ by eight fuel units (relative difference below $10^{-7}$), and every other cell agrees exactly. In every "
+        "differing cell the difference equals the bytes moved by \\texttt{memory.copy} and \\texttt{memory.fill}, which "
+        "Cranelift charges per byte and Winch does not; with per-byte costs set to zero, Cranelift matches Winch in all 200 cells. Per-repetition fuel, and hence the relative difference, is identical at \\texttt{-O2} and "
+        "\\texttt{-O3} for every listed kernel except \\texttt{pb\\_ludcmp}, where it differs by 0.015\\%: the two builds execute the same operator sequence in the timed loop, "
+        "although the module bytes differ.}\\label{tab:backend_disagreement}\n"
         "\\footnotesize\n\\setlength{\\tabcolsep}{4pt}%\n"
         "\\begin{tabular}{lrrrr}\n"
         "\\toprule\n"
         " & \\multicolumn{2}{c}{\\texttt{-O2}} & \\multicolumn{2}{c}{\\texttt{-O3}} \\\\\n"
         "\\cmidrule(lr){2-3}\\cmidrule(lr){4-5}\n"
-        "Kernel & Cranelift fuel (M) & Winch vs.\\ Cranelift & Cranelift fuel (M) & Winch vs.\\ Cranelift \\\\\n"
+        "Kernel & Fuel/rep (M) & Winch vs.\\ Cranelift & Fuel/rep (M) & Winch vs.\\ Cranelift \\\\\n"
         "\\midrule\n"
         f"{body}\n"
         "\\bottomrule\n"

@@ -1,16 +1,21 @@
 \begin{table}[t]
-\caption{Recycling growth slopes for the six RQ4 conditions. Each slope is the OLS slope of private memory against recycled lifecycle count, in bytes per lifecycle. Single-run conditions report a 95\% interval from the OLS standard error. Rust allocator conditions report the mean of five repeat slopes with a 95\% $t$ interval on the repeat mean. The six conditions together comprise 1,680,000 recycled lifecycles.}\label{tab:rq4_slopes}
+\caption{RQ4 attribution of recycling growth in the Rust child. Slopes are OLS slopes of private anonymous memory against lifecycle count (bytes per lifecycle), mean of five independent processes with a 95\% $t$ interval; growth is the total over 120,000 lifecycles in KiB. In the \emph{faulted in loop} columns the 8-byte latency record of each lifecycle is the first write to its buffer page, as in the original harness; in the \emph{prefaulted} columns every buffer page is written before the first checkpoint. The last rows run $10^6$ lifecycles with a prefaulted buffer (three processes per allocator) and report the slope after lifecycle $10^5$ and the growth reached by then.}\label{tab:rq4_slopes}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
 \begin{adjustbox}{max width=\textwidth}%
-\begin{tabular}{lrrrr}
+\begin{tabular}{llrrrr}
 \toprule
-Condition & Repeats & Lifecycles & Slope (B/lifecycle) & 95\% interval \\
+Allocator & Dirty pages & \multicolumn{2}{c}{Buffer faulted in loop} & \multicolumn{2}{c}{Buffer prefaulted} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+ & & Slope & Growth & Slope & Growth \\
 \midrule
-Python, default reservation & 1 & 120,000 & 8.21 & $[8.18, 8.25]$ \\
-Python, no growth reservation & 1 & 120,000 & 0.19 & $[0.17, 0.21]$ \\
-Rust, zero dirty pages & 1 & 120,000 & 8.95 & $[8.71, 9.19]$ \\
-Rust, four dirty pages & 1 & 120,000 & 9.07 & $[8.81, 9.34]$ \\
-Rust, on-demand allocation & 5 & 600,000 & 9.14 & $[8.95, 9.34]$ \\
-Rust, pooled allocation & 5 & 600,000 & 8.99 & $[8.91, 9.07]$ \\
+on-demand & 0 & $9.37 \pm 0.11$ & 1,322 & $1.31 \pm 0.15$ & 390 \\
+on-demand & 4 & $9.32 \pm 0.15$ & 1,312 & $1.33 \pm 0.18$ & 381 \\
+pooled & 0 & $9.13 \pm 0.01$ & 1,264 & $1.11 \pm 0.02$ & 330 \\
+pooled & 4 & $9.13 \pm 0.02$ & 1,270 & $1.12 \pm 0.01$ & 333 \\
+\midrule
+on-demand, $10^6$ lifecycles & 4 & \multicolumn{2}{c}{---} & $0.022$ (after $10^5$) & 379 (at $10^5$) \\
+pooled, $10^6$ lifecycles & 4 & \multicolumn{2}{c}{---} & $0.020$ (after $10^5$) & 325 (at $10^5$) \\
 \bottomrule
 \end{tabular}%
 \end{adjustbox}

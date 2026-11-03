@@ -67,18 +67,33 @@ def tab01_campaign() -> None:
         rows.append([label, FUEL_METER.get(runtime, "none"), str(int(subset["replicates"].iloc[0])),
                      f"{int(subset['replicates'].sum()):,}", f"{ratio.median():.3f} ({ratio.quantile(0.95):.3f})"])
     rq2 = pd.read_csv(DATA / "rq2_boundary_conformance.csv")
-    rq3 = pd.read_csv(DATA / "rq3_host_call_latency.csv")
-    rq4 = pd.read_csv(DATA / "rq4_multitenant_rss_uss.csv")
-    rows.append(["RQ2 linear-memory probes (6 configurations)", "n/a", "100", f"{len(rq2):,}", "n/a"])
-    rows.append(["RQ3 host-call samples (wasm and native)", "n/a", "926", f"{len(rq3):,}", "n/a"])
-    rows.append([f"RQ4 sandbox lifecycles (2 conditions, {len(rq4)} checkpoints each)", "n/a",
-                 "1 per lifecycle", "240,000", "n/a"])
+    compound = pd.read_csv(DATA / "r4" / "rq2_compound.csv")
+    pooling = pd.read_csv(DATA / "r4" / "rq2_pooling.csv").iloc[0]
+    host = pd.read_csv(DATA / "r4" / "rq3_host_call_rust.csv", keep_default_na=False)
+    wasi = pd.read_csv(DATA / "r4" / "rq3_wasi_p1_p2.csv")
+    pmu_runs = sum(len(pd.read_csv(DATA / "pmu" / f"pmu_{kind}_{backend}.csv"))
+                   for kind in ("corpus", "adversarial") for backend in ("cranelift", "winch"))
+    serverless = sum(len(pd.read_csv(DATA / "r4" / f"serverless_{backend}.csv")) for backend in ("cranelift", "winch"))
+    quota = sum(len(pd.read_csv(path)) for path in (DATA / "r4").glob("quota_*.csv") if "plan" not in path.name)
+    attribution = pd.read_csv(METRICS / "rq4_buffer_attribution_slopes.csv")
+    long_run = pd.read_csv(DATA / "rq4_long_run.csv")
+    rows.append(["kperf campaign: corpus and adversarial kernels, Cranelift and Winch", "Wasm fuel", "100 / 30", f"{pmu_runs:,}", "n/a"])
+    rows.append(["Serverless-style kernels, Cranelift and Winch", "Wasm fuel", "100", f"{serverless:,}", "n/a"])
+    rows.append(["RQ2 single-operation probes (6 configurations)", "n/a", "100", f"{len(rq2):,}", "n/a"])
+    rows.append(["RQ2 compound trials (7 configurations, 40 steps each)", "n/a", "600", f"{len(compound):,}", "n/a"])
+    rows.append(["RQ2 pooled tenant attempts (8 threads, 64 slots)", "n/a", "n/a", f"{int(pooling['attempts']):,}", "n/a"])
+    rows.append(["RQ3 host-call samples, Rust embedder (null, host, native)", "n/a", "200", f"{len(host):,}", "n/a"])
+    rows.append(["RQ3 WASI invocations (Preview 1 and 2, full and baseline)", "n/a", "463", f"{len(wasi):,}", "n/a"])
+    rows.append(["RQ4 recycling processes (attribution and $10^6$-lifecycle runs)", "n/a", "5 / 3",
+                 f"{len(attribution) + long_run[['mode', 'repeat']].drop_duplicates().shape[0]:,}", "n/a"])
+    rows.append(["Quota experiment calls (three policies, ticks, overhead)", "Wasm fuel", "3--20", f"{quota:,}", "n/a"])
     write_table("tab01.tex",
                 "Measurement campaign. Each timed runtime covers 200 cells (50 kernels at four optimization levels). "
                 "The wall-to-CPU ratio compares a replicate's elapsed time with its thread CPU time; a value near 1 "
                 "means the timed thread was not time-shared (median, with the 95th percentile in parentheses). "
-                "Each replicate waited until the 1-minute load was at most 4 (per-replicate gate, applied to WasmEdge "
-                "AOT, V8, and the host-call sweep; per-step gate elsewhere).",
+                "Every timed experiment ran under a 1-minute load gate of 3.0, before each cell for the kperf and "
+                "pmu\\_bench harnesses and before each step for the external runners; Table~\\ref{tab:load} gives the "
+                "recorded loads. The WasmEdge interpreter was re-run to completion after an interrupted first attempt.",
                 "tab:campaign", "lrrrr",
                 ["Experiment or runtime", "Fuel meter", "Replicates", "Runs", "Wall/CPU (p95)"], rows, wide=True)
 
@@ -194,7 +209,7 @@ def main() -> None:
     tab02_anova_by_group()
     tab03_boundary()
     tab04_host_fit()
-    tab05_recycling_and_calibwasm()
+    # tab05 is produced by make_round4_tables.py since the round-4 revision.
     print("wrote tab01.tex to tab05.tex in", TABLE_DIR)
 
 

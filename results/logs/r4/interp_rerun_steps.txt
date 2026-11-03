@@ -1,0 +1,2 @@
+1793626705 START wasmedge-interp load=2.99
+1793629718 DONE wasmedge-interp status=0

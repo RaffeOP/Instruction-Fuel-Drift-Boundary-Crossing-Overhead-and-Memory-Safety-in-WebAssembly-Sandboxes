@@ -1,0 +1,16 @@
+backend,kernel,opt_level,group,policy,replicate,budget_ns,tick_us,cpu_ns,overshoot,stop,fuel_used
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,fuel,0,20000000,1000,20403541,0.02018,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,fuel,1,20000000,1000,19321791,-0.03391,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,fuel,2,20000000,1000,20498916,0.02495,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,fuel,3,20000000,1000,32050250,0.60251,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,fuel,4,20000000,1000,26006958,0.30035,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,time,0,20000000,1000,23991000,0.19955,time,
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,time,1,20000000,1000,27430084,0.37150,time,
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,time,2,20000000,1000,20899750,0.04499,time,
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,time,3,20000000,1000,26344292,0.31721,time,
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,time,4,20000000,1000,20487917,0.02440,time,
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,dual,0,20000000,1000,18144625,-0.09277,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,dual,1,20000000,1000,18484792,-0.07576,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,dual,2,20000000,1000,17569708,-0.12151,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,dual,3,20000000,1000,18017833,-0.09911,fuel,527704485
+cranelift,adv_bulk_copy_256M_single,wat,adv_bulk,dual,4,20000000,1000,16692542,-0.16537,fuel,527704485

@@ -1,0 +1,25 @@
+\begin{table}[t]
+\caption{CPU overshoot of a 20\,ms budget per call under three policies, as (CPU at stop $-$ budget)/budget; negative values mean the call was stopped early. Fuel-only converts the budget to fuel at the benign median cost per fuel unit; its runs are stopped by a safety cap at 50 times the budget, so its maxima are censored where marked. The CPU-time gate checks the guest thread's CPU time at every 1\,ms epoch; DualGate applies both limits. Enabling epoch interruption costs a geometric-mean factor of 1.0677 (95\% CI 1.0406--1.0955) in CPU time over 200 corpus cells. A single 256\,MiB \texttt{memory.copy} cannot be interrupted mid-operation; under the CPU-time gate the probe overshoots by up to 37\%.}\label{tab:quota}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lllrrrr}
+\toprule
+Backend & Kernels & Policy & Runs & Median & 99th pct. & Maximum \\
+\midrule
+Cranelift & corpus & Fuel only & 1000 & +8.5\% & +573.8\% & +925.3\% \\
+Cranelift & corpus & CPU-time gate & 1000 & +2.9\% & +6.3\% & +6.3\% \\
+Cranelift & corpus & DualGate (fuel + CPU time) & 1000 & +0.7\% & +6.1\% & +6.3\% \\
+Cranelift & serverless & Fuel only & 100 & +13.0\% & +108.5\% & +134.0\% \\
+Cranelift & serverless & CPU-time gate & 100 & +4.2\% & +5.9\% & +6.3\% \\
+Cranelift & serverless & DualGate (fuel + CPU time) & 100 & +2.6\% & +6.2\% & +6.2\% \\
+Cranelift & adversarial & Fuel only & 195 & +957.7\% & +4906.0\% & +4906.1\% (50 at cap) \\
+Cranelift & adversarial & CPU-time gate & 195 & +3.3\% & +6.1\% & +6.2\% \\
+Cranelift & adversarial & DualGate (fuel + CPU time) & 195 & +2.5\% & +6.2\% & +6.2\% \\
+Winch & adversarial & Fuel only & 195 & +2435.6\% & +4906.1\% & +4906.3\% (80 at cap) \\
+Winch & adversarial & CPU-time gate & 195 & +3.5\% & +6.2\% & +6.3\% \\
+Winch & adversarial & DualGate (fuel + CPU time) & 195 & +3.4\% & +6.0\% & +6.2\% \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

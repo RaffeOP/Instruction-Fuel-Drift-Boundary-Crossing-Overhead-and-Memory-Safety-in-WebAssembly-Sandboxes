@@ -17,6 +17,7 @@ so the profile describes the timed path and excludes the checksum path.
 """
 
 import csv
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -134,7 +135,8 @@ def discover_all() -> List[Kernel]:
 def write_wrapper(kernel: Kernel) -> Path:
     WRAPPER_DIR.mkdir(parents=True, exist_ok=True)
     path = WRAPPER_DIR / f"{kernel.key}_wrap.c"
-    path.write_text(WRAPPER_TEMPLATE.format(kernel_path=kernel.source.resolve()))
+    rel_path = os.path.relpath(kernel.source.resolve(), WRAPPER_DIR.resolve())
+    path.write_text(WRAPPER_TEMPLATE.format(kernel_path=rel_path))
     return path
 
 def run_checked(command: List[str]) -> None:

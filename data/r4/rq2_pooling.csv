@@ -1,0 +1,2 @@
+threads,slots,attempts,admitted,refused_cleanly,dirty_slot,pattern_lost,other_errors
+8,64,1600,770,830,0,0,0

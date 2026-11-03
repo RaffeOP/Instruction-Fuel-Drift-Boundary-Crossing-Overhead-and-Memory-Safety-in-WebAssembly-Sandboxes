@@ -1,0 +1,18 @@
+on_demand_default 0 0 10.906
+on_demand_default 0 1 8.476
+on_demand_default 0 2 10.622
+on_demand_default 1 0 2.925
+on_demand_default 1 1 9.784
+on_demand_default 1 2 1.787
+no_growth_reservation 0 0 14.406
+no_growth_reservation 0 1 1.498
+no_growth_reservation 0 2 12.145
+no_growth_reservation 1 0 4.069
+no_growth_reservation 1 1 2.494
+no_growth_reservation 1 2 0.325
+                                  mean    std
+condition             prefault               
+no_growth_reservation 0          9.350  6.893
+                      1          2.296  1.880
+on_demand_default     0         10.001  1.329
+                      1          4.832  4.326

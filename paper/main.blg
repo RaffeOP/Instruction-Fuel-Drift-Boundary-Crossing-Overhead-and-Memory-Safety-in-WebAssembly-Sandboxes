@@ -1,5 +1,34 @@
 This is BibTeX, Version 0.99d
 Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: main.aux
-The style file: sn-mathphys.bst
+White space in argument---line 18 of file main.aux
+ : \citation{haas2017bringing,
+ :                             shillaker2020faasm}
+I'm skipping whatever remains of this command
+White space in argument---line 71 of file main.aux
+ : \citation{binder2001portable,
+ :                               hulaas2004program}
+I'm skipping whatever remains of this command
+White space in argument---line 74 of file main.aux
+ : \citation{albert2019fumes,
+ :                            das2020exact, grech2018madmax}
+I'm skipping whatever remains of this command
+White space in argument---line 77 of file main.aux
+ : \citation{jangda2019not,
+ :                          khan2026taxonomy, kakati2024cross}
+I'm skipping whatever remains of this command
+White space in argument---line 79 of file main.aux
+ : \citation{yang2019empirically,
+ :                                perez2020broken}
+I'm skipping whatever remains of this command
+White space in argument---line 80 of file main.aux
+ : \citation{mao2024ewapa,
+ :                         yu2026wasc}
+I'm skipping whatever remains of this command
+White space in argument---line 81 of file main.aux
+ : \citation{jansen2025memory,
+ :                             shillaker2020faasm}
+I'm skipping whatever remains of this command
+The style file: ws-jcsc.bst
 Database file #1: ../literature/peer_reviewed_papers.bib
+(There were 7 error messages)

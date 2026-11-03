@@ -1,0 +1,20 @@
+\begin{table}[t]
+\caption{Cost per fuel unit $\mu_\psi$ (ns) of the five serverless-style kernels at the four optimization levels, 100 gated replicates per cell. The kernels are JSON request parsing, Base64 encode and decode, HTTP request routing against a 64-route table, LZ77 compression with decompression, and HMAC-SHA256 verification of JWT-sized tokens; under Cranelift they lie between percentiles 31 and 74 of the 200 corpus cells; under Winch they lie between percentiles 48 and 97 of the 200 corpus cells.}\label{tab:serverless}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{Cranelift} & \multicolumn{4}{c}{Winch} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Kernel & -O0 & -O2 & -O3 & -Oz & -O0 & -O2 & -O3 & -Oz \\
+\midrule
+\texttt{base64} & 0.0355 & 0.0368 & 0.0363 & 0.0337 & 0.1262 & 0.0901 & 0.0908 & 0.0911 \\
+\texttt{hmac\_sha256} & 0.0535 & 0.0329 & 0.0339 & 0.0387 & 0.1226 & 0.0850 & 0.0861 & 0.1107 \\
+\texttt{http\_route} & 0.0291 & 0.0549 & 0.0549 & 0.0467 & 0.1880 & 0.2446 & 0.2387 & 0.1957 \\
+\texttt{json\_parse} & 0.0312 & 0.0374 & 0.0367 & 0.0466 & 0.1480 & 0.1356 & 0.1249 & 0.2169 \\
+\texttt{lz\_compress} & 0.0388 & 0.0644 & 0.0647 & 0.0647 & 0.1480 & 0.1289 & 0.1226 & 0.1652 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

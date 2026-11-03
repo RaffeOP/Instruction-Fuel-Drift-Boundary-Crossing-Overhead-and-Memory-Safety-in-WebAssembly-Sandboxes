@@ -1,0 +1,8 @@
+test,event,expected,measured,ratio
+fixed_loop_4_per_iter,FIXED_INSTRUCTIONS,400000000,400024246,1.0001
+fixed_loop_4_per_iter,BRANCH_MISPRED_NONSPEC,1,7,7.0000
+branch_constant,BRANCH_MISPRED_NONSPEC,0,1,0.0000
+branch_random_half,BRANCH_MISPRED_NONSPEC,10000000,9998725,0.9999
+chase_16KiB_resident,L1D_CACHE_MISS_LD_NONSPEC,0,291,0.0000
+chase_256MiB_random,L1D_CACHE_MISS_LD_NONSPEC,20000000,19999588,1.0000
+chase_256MiB_random,cycles_per_load,0,403,0.0000

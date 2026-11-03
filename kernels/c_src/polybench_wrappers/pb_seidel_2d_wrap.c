@@ -36,7 +36,7 @@ static int pb_fprintf(FILE *stream, const char *format, ...) {
 }
 
 #define fprintf pb_fprintf
-#include "/Users/raffe/Downloads/R3/kernels/polybench/stencils/seidel-2d/seidel-2d.c"
+#include "../../polybench/stencils/seidel-2d/seidel-2d.c"
 
 __attribute__((export_name("run")))
 long long run(int reps) {

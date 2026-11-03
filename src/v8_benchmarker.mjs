@@ -16,8 +16,8 @@ const require = createRequire(import.meta.url);
 const hardware = require("../c_harness/v8_addon/hwcounters.node");
 
 const PROJECT_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PLAN_PATH = join(PROJECT_ROOT, "data", "timing_plan.csv");
-const OUT_PATH = join(PROJECT_ROOT, "data", "rq1_v8.csv");
+const PLAN_PATH = process.env.R3_PLAN ?? join(PROJECT_ROOT, "data", "timing_plan.csv");
+const OUT_PATH = process.env.R3_OUT ?? join(PROJECT_ROOT, "data", "rq1_v8.csv");
 const RUNTIME = "v8";
 const REPLICATES = Number(process.env.R3_REPLICATES ?? 100);
 const WARMUP_CALLS = 2;

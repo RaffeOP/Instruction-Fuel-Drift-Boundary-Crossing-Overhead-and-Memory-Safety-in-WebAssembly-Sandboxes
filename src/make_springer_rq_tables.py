@@ -244,28 +244,27 @@ def range_text(repeats, low, high):
 
 def write_latency_table(recycling):
     body = "\n".join(
-        f"{label} & {repeats} & {median:.1f} & {range_text(repeats, low, high)} & {p95:.1f} & {p99:.1f} & {slope:.2f} \\\\"
-        for label, repeats, median, low, high, p95, p99, slope in latency_rows(recycling)
+        f"{label} & {repeats} & {median:.1f} & {range_text(repeats, low, high)} & {p95:.1f} & {p99:.1f} \\\\"
+        for label, repeats, median, low, high, p95, p99, _ in latency_rows(recycling)
     )
     LATENCY_TABLE_PATH.write_text(
         "\\begin{table}[t]\n"
-        "\\caption{Lifecycle latency and memory growth by harness and allocator. Latencies are in microseconds, "
+        "\\caption{Lifecycle latency by harness and allocator. Latencies are in microseconds, "
         "computed over the 120,000 lifecycles of each series. For the Rust allocators, the median column is the "
         "median of the five per-repeat medians, the range column gives the smallest and largest repeat median, "
-        "and the percentile columns are medians of the per-repeat values. The slope is the USS growth rate from "
+        "and the percentile columns are medians of the per-repeat values. Memory growth is in "
         "Table~\\ref{tab:rq4_slopes}.}\\label{tab:rq4_latency}\n"
         "\\footnotesize\n\\setlength{\\tabcolsep}{4pt}%\n"
-        "\\begin{tabular}{lrrrrrr}\n\\toprule\n"
-        "Condition & Repeats & Median & Repeat range & 95th & 99th & Slope (B/lifecycle) \\\\\n"
+        "\\begin{tabular}{lrrrrr}\n\\toprule\n"
+        "Condition & Repeats & Median & Repeat range & 95th & 99th \\\\\n"
         "\\midrule\n" + body + "\n\\bottomrule\n\\end{tabular}\n\\end{table}\n"
     )
 
 
 def main():
-    write_recycling_table(recycling_rows())
-    write_bound_table(read_cranelift_fuel_psi())
+    # Tables 8 and 9 are produced by make_round4_tables.py since the round-4 revision.
     write_latency_table(recycling_rows())
-    print(f"wrote {RECYCLING_TABLE_PATH} and {BOUND_TABLE_PATH}")
+    print(f"wrote {LATENCY_TABLE_PATH}")
 
 
 if __name__ == "__main__":

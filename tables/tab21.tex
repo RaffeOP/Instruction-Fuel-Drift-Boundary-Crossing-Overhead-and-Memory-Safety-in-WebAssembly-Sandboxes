@@ -1,0 +1,30 @@
+\begin{table}[t]
+\caption{Microarchitectural attribution of the cost per fuel unit over the 200 Wasmtime Cranelift cells of the gated kperf campaign. Because $\mu_\psi = (\text{native instructions per fuel unit})\times\mathrm{CPI}/f_{\mathrm{eff}}$ and $f_{\mathrm{eff}}$ is nearly constant, $\mathrm{Var}(\log\mu_\psi)$ splits into the two factors and their covariance. $R^2$ values are in-sample least-squares fits of $\log\mu_\psi$ with an intercept.}\label{tab:attribution}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lr}
+\toprule
+Quantity & Value \\
+\midrule
+Variance of $\log\mu_\psi$ & 0.469 \\
+\quad share from $\log$(native instructions per fuel unit) & 0.13 \\
+\quad share from $\log$ CPI & 0.84 \\
+\quad share from twice their covariance & 0.04 \\
+\midrule
+$R^2$, native instructions per fuel unit & 0.17 \\
+$R^2$, four event rates per fuel unit & 0.40 \\
+$R^2$, both & 0.53 \\
+\midrule
+Spearman $\rho$ with $\mu_\psi$: L1D load misses per fuel unit & $+0.24$ ($p=5.9\times10^{-4}$) \\
+Spearman $\rho$ with $\mu_\psi$: branch mispredictions per fuel unit & $+0.25$ ($p=4.7\times10^{-4}$) \\
+Spearman $\rho$ with $\mu_\psi$: L1D TLB misses per fuel unit & $+0.47$ ($p=3.1\times10^{-12}$) \\
+Spearman $\rho$ with $\mu_\psi$: L2 TLB misses per fuel unit & $+0.30$ ($p=1.8\times10^{-5}$) \\
+Spearman $\rho$ with $\mu_\psi$: share of cycles waiting on an L1D miss & $+0.20$ ($p=4.6\times10^{-3}$) \\
+Spearman $\rho$ with $\mu_\psi$: retired instructions per cycle & $-0.91$ ($p=2.4\times10^{-77}$) \\
+Spearman $\rho$ with $\mu_\psi$: memory-operator share of fuel & $-0.49$ ($p=9.9\times10^{-14}$) \\
+Spearman $\rho$ with $\mu_\psi$: L1D misses per Wasm load & $+0.39$ ($p=1.4\times10^{-8}$) \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

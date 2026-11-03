@@ -1,0 +1,1 @@
+./scripts/run_round4_campaign.sh: line 29: printf: write error: No space left on device

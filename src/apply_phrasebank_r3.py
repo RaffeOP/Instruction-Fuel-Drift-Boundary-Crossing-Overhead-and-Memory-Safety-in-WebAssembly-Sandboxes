@@ -1,0 +1,501 @@
+import sys
+from pathlib import Path
+
+content = r"""\documentclass[pdflatex,sn-mathphys,Numbered]{sn-jnl}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage[title]{appendix}
+\usepackage{longtable}
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue, pdftitle={Instruction-Fuel Drift, Boundary-Crossing Overhead, and Memory Safety in WebAssembly Sandboxes}, pdfauthor={Devarsh Patel}, pdfkeywords={WebAssembly, serverless computing, sandboxing, fuel metering, runtime benchmarking, WASI, measurement methodology}}
+\usepackage{adjustbox}
+\usepackage{array}
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.80}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\newtheorem{proposition}{Proposition}
+
+\begin{document}
+
+\title[Instruction-Fuel Drift in WebAssembly Sandboxes]{Instruction-Fuel Drift, Boundary-Crossing Overhead, and Memory Safety in WebAssembly Sandboxes: A Multi-Runtime Measurement Study}
+
+\author[1]{\fnm{Devarsh} \sur{Patel}}\email{devarsh.patel2024@vitstudent.ac.in}
+\author*[1]{\fnm{Ranjithkumar} \sur{S}}\email{ranjithkumar.s@vit.ac.in}
+
+\affil*[1]{\orgdiv{School of Computer Science and Engineering (SCOPE)}, \orgname{Vellore Institute of Technology (VIT)}, \orgaddress{\city{Vellore}, \state{Tamil Nadu}, \postcode{632014}, \country{India}}}
+
+\abstract{
+A fundamental requirement of multi-tenant WebAssembly platforms is the enforcement of resource boundaries, commonly achieved by metering instruction fuel. The primary objective of the present study is to investigate the fidelity with which instruction fuel tracks on-CPU execution time, and to systematically examine the microarchitectural mechanisms responsible for metering failure. Evaluating 50 benchmark kernels across four optimization levels under twelve runtime configurations on an 8-core 64-bit ARM processor (ARMv8.6-A) within a load-logged execution environment, the cost of one fuel unit under Wasmtime's Cranelift backend exhibits a 34- to 38-fold dispersion. Validated hardware performance counters indicate that cycles per native instruction accounts for 84\% of its log-variance, with cache, TLB, and branch events explaining approximately half of the observed dispersion. A structured adversarial search raises the unit cost to 93.8\,ns per fuel unit, 260 times the most expensive benign kernel, through dependent cache-missing loads. Furthermore, Wasmtime's Winch backend assesses bulk-memory operators on a per-operation rather than a per-byte basis, causing unit costs to grow without bound; this single omission accounts exactly for every fuel disagreement between Winch and Cranelift. Calibrating fuel from opcode counts does not survive leave-one-kernel-out validation; calibrating it from hardware counters narrows the typical error from a factor of 2.0 to 1.74, but underestimates adversarial kernels by up to 28 times. To address these vulnerabilities, a CPU-time gate built on Wasmtime's epoch interruption, combined with fuel, holds every call within 6.3\% of its budget on benign and adversarial code on both backends, where fuel alone overshoots by up to 49 times, at a geometric-mean cost of 6.8\%. The sandbox boundary remains robust: 4{,}800 single and 4{,}200 compound linear-memory trials conform, a host call adds approximately 21\,ns in a native embedder, and sandbox recycling plateaus at an allocator high-water mark rather than leaking, correcting an earlier harness artifact. Taken together, these findings indicate that instruction fuel functions as a cooperative yield mechanism rather than an equitable CPU quota, and constitutes a property of the backend rather than of the module.
+}
+
+\keywords{WebAssembly, serverless computing, sandboxing, fuel metering, runtime benchmarking, WASI, measurement methodology}
+
+\maketitle
+
+\section{Introduction}
+\label{sec:intro}
+A fundamental requirement of multi-tenant cloud platforms is the execution of untrusted code within lightweight WebAssembly sandboxes to ensure rapid startup latency and strict memory isolation \cite{haas2017bringing, shillaker2020faasm}. However, memory isolation represents only a partial solution. A central concern in multi-tenant execution is establishing a dependable bound on CPU consumption, which runtimes conventionally enforce by metering instructions via an abstraction termed instruction fuel. The runtime decrements fuel as the guest executes and traps when the allocated budget is exhausted.
+
+Fuel counters track guest instructions, whereas CPU time depends on the native machine code emitted by the compiler. Between the high-level computation and native execution lie two compilation stages: the frontend compiler producing the bytecode module and the backend code generator lowering it to machine instructions. Both stages alter the dynamic work performed, while the backend dictates the concrete cost of each operation. Consequently, a fixed fuel allocation yields substantially disparate CPU durations across different modules, optimization tiers, and runtime engines. Although Jangda et al.\ evaluated WebAssembly performance relative to native execution across standard benchmarks \cite{jangda2019not}, what is not yet clear is the fidelity with which instruction fuel tracks thread CPU time, and the extent to which this relationship depends on compiler configurations and runtime backends.
+
+This issue has significant practical implications under adversarial workloads. In cloud environments where resource consumption is billed per fuel unit, an untrusted tenant has an incentive to execute computations that maximise CPU consumption per metered unit, as demonstrated by Perez and Livshits in the context of EVM gas \cite{perez2020broken}. Therefore, the present study investigates both the empirical dispersion across benign workloads and the worst-case boundaries an adversarial tenant can construct, using validated hardware performance counters to explain the observed phenomena.
+
+The present study makes six primary contributions:
+\begin{itemize}
+\item \textbf{Fuel-to-time drift across twelve configurations.} For 50 benchmark kernels across four optimization levels, we evaluate the cost of one fuel unit under a load-logged protocol, demonstrating that it spreads by a factor of 34 to 38 under Wasmtime Cranelift in two independent gated runs, and showing that Winch and Cranelift report different fuel for the same module (Section~\ref{sec:rq1}).
+\item \textbf{A microarchitectural account of the drift.} Using validated kperf performance counters, we establish that cycles per native instruction accounts for $84\%$ of the variance of the log cost per fuel unit, that cache, TLB, and branch events explain about half of it, and that the miss rate per load, not the share of memory operations, is the operative variable (Section~\ref{sec:attribution}).
+\item \textbf{An adversarial worst case and a backend metering gap.} A structured search over 39 kernels raises the Cranelift cost per fuel unit to $93.8$\,ns, $260$ times the most expensive benign cell, and demonstrates that Winch in Wasmtime 50.0.0 charges bulk-memory operators per operation rather than per byte, so fuel does not bound their CPU time; we show that this one omission accounts exactly for every fuel disagreement between Winch and Cranelift on the benign corpus (Sections~\ref{sec:rq1} and \ref{sec:adversarial}).
+\item \textbf{Calibration under an honest split.} Evaluating linear recalibration with leave-one-kernel-out validation bounded by Proposition~\ref{prop:linear_bound}, we demonstrate that opcode-class calibration fails to reduce estimation error, counter-based calibration reduces the typical error factor from $2.0$ to $1.74$, and neither approach generalises to adversarial code (Section~\ref{sec:rq5}).
+\item \textbf{A CPU-time gate that closes the gap.} We propose DualGate, which couples fuel metering with CPU-time enforcement at epoch deadlines. It holds every call within $6.3\%$ of a 20\,ms budget on benign, serverless, and adversarial code on both backends, where fuel alone overshoots by up to $49$ times, at a geometric-mean overhead of $6.8\%$ (Section~\ref{sec:dualgate}).
+\item \textbf{Boundary and recycling costs, with a corrected recycling result.} We measure linear-memory trap conformance, the host-call boundary in a Rust embedder, and WASI Preview 1 against Preview 2 writes; furthermore, we demonstrate that the per-lifecycle memory growth reported in an earlier version of this study was an artifact of the measurement harness's own buffer: Wasmtime sandbox recycling plateaus at an allocator high-water mark rather than leaking (Sections~\ref{sec:rq2}--\ref{sec:rq4}).
+\end{itemize}
+
+The remainder of this paper is organised as follows: Section~\ref{sec:related} reviews prior work, including resource metering before WebAssembly. Section~\ref{sec:metrics} defines the metrics and the formal bounds used in the analysis. Section~\ref{sec:methods} describes the experimental testbed, the telemetry counters, and the load-gated protocol. Section~\ref{sec:results} presents the empirical results. Section~\ref{sec:discussion} discusses the implications for fuel-based quotas, and Section~\ref{sec:threats} addresses potential threats to validity. Finally, Section~\ref{sec:conclusion} provides concluding remarks.
+
+\section{Related Work}
+\label{sec:related}
+The bibliography comprises WebAssembly foundations and runtime studies from 2017 to 2020, recent runtime, security, and WASI investigations from 2024 to 2026, earlier work on resource metering in operating systems, managed runtimes, and smart-contract platforms from 1998 to 2020, and the statistical foundations utilized in Section~\ref{sec:metrics}. Table~\ref{tab:lit_taxonomy} provides a comparative overview of the closest empirical investigations, and the six thematic clusters below categorize the literature.
+
+To identify recent WebAssembly literature, a systematic literature search was conducted comprising ten keyword queries restricted to 2024 onward and six saturation checks tracking candidate research gaps. Because that window excludes earlier foundational metering studies, a backward citation search was conducted from gas-metering and Java resource-accounting papers, yielding Cluster F. In total, 124 records were retrieved. Thirty-two duplicates were identified and removed, resulting in 92 unique records. Articles were included only if they were peer-reviewed publications from established academic publishers or indexed proceedings, and focused directly on runtime performance, sandbox isolation, host interfaces, or measurement methodology. Theses, preprints, non-peer-reviewed repository copies, and unindexed conference proceedings were excluded. This filtering process yielded 28 relevant records, 19 of which were already present in the verified reference list. The remaining nine records were incorporated following bibliographic verification against Crossref metadata. Every selection decision is documented in the study repository. Although the search index indexes both paywalled and open-access literature, citation-based ranking algorithms may introduce potential selection bias regarding less-cited recent works.
+
+Each bibliographic entry was cross-referenced against its authoritative Crossref or USENIX record for title, year, venue, and pagination accuracy. The cluster summaries below delineate the scope and reported findings of each work.
+
+\textbf{Cluster A: runtimes and cross-platform evaluation.} A considerable amount of literature has been published on WebAssembly runtimes and cross-platform performance. Zhang et al.\ survey 103 research papers on WebAssembly runtimes, covering runtime design, testing, and application domains \cite{zhang2025survey}. Khan et al.\ evaluate 13 WASI-compatible runtimes on eight machine-learning and arithmetic benchmarks, with an external power meter, and report that interpreter-oriented runtimes exceed $10\times$ overhead in time and energy while optimized AOT engines approach a native reference \cite{khan2026taxonomy}. Moron and Wallentowitz benchmark WebAssembly on microcontrollers against native code, MicroPython, and Lua \cite{moron2025embedded}. Kakati and Brorsson evaluate two runtimes across four architectures, including RISC-V and embedded boards, for speed and startup time \cite{kakati2024cross}, and a later conference paper addresses the performance and usability of multiplatform WebAssembly containers \cite{kakati2025multiplatform}. Khelifa et al.\ find roughly $1.1\times$ overhead for small deep-learning networks on standalone runtimes, with larger networks showing greater overhead \cite{khelifa2024case}. De Palma et al.\ benchmark a WebAssembly function-as-a-service platform against three container-based platforms on constrained edge hardware \cite{depalma2024webassembly}. Khan et al.\ compare machine-learning programs written in Python, Rust, and C++ and compiled to WebAssembly, in a browser and under WASI \cite{khan2025ml}. Golec et al.\ survey cold-start latency in serverless computing and propose a taxonomy of mitigations \cite{golec2025cold}. Moebius et al.\ compare unikernels with Firecracker microVMs, Docker, and gVisor for cold start and idle footprint at the edge \cite{moebius2024unikernels}. Chennubhotla et al.\ report that WebAssembly configurations run 31.4\% faster, use 59.5\% less memory, and produce images 86.5\% smaller than Docker \cite{chennubhotla2025docker}.
+
+\textbf{Cluster B: security, isolation, and resource control.} A growing body of literature has examined WebAssembly security, isolation, and resource exhaustion. Perrone and Romano review 121 papers on WebAssembly security, organized into seven categories \cite{perrone2025security}. Draissi et al.\ analyze memory corruption in WebAssembly across 37{,}797 web domains and find that 77.81\% of them fully trust data that attacker-controlled sources can influence \cite{draissi2025wemby}. Wang et al.\ virtualize WebAssembly linear memory for enclaves to allow page-level sharing and access control \cite{wang2025waven}. Rostamipoor et al.\ protect serverless functions against memory-leakage attacks with selective encryption and report overheads of 2.8\% to 8.5\% \cite{rostamipoor2025leakless}. Yu et al.\ decouple the WASI system interface into a virtualized daemon, which costs a $3.2\times$ slowdown on the WASI call path but gives three times the memory density of Firecracker \cite{yu2026wasc}. Coppolino et al.\ build a multi-tenant embedded runtime with a patched system interface and a trusted execution environment \cite{coppolino2025wasmbox}. Fink et al.\ use Arm memory tagging and pointer authentication for WebAssembly memory safety, with runtime overheads below 5.8\% \cite{fink2025cage}. Yu et al.\ report that current runtimes do not protect resource isolation well: a malicious instance can exhaust host resources through the WASI and WASIX interfaces, and they derive exploitation strategies from static analysis of the runtimes \cite{yu2025resource}. Fuel meters guest operations, so host-side work that a guest reaches through WASI calls is outside the budget this paper measures. The foundations are Narayan et al.\ on fine-grained isolation in a production browser \cite{narayan2020firefox}, Lehmann et al.\ on the binary security of WebAssembly \cite{lehmann2020binary}, Shillaker and Pietzuch on stateful serverless isolation \cite{shillaker2020faasm}, and Agache et al.\ on lightweight virtualization for serverless \cite{agache2020firecracker}.
+
+\textbf{Cluster C: instrumentation, compilers, and testing.} Recent advances in instrumentation, compilers, and testing have facilitated fine-grained evaluation. Titzer et al.\ present non-intrusive dynamic instrumentation for WebAssembly, with probes that can be inserted and removed and that cost nothing when disabled \cite{titzer2024flexible}. That is the mechanism a dynamic calibration would need, and Section~\ref{sec:rq5} uses the same counting idea. Schwarz et al.\ present TPDE, a single-pass back-end framework that compiles LLVM IR 8 to 26 times faster than LLVM at $-$O0 with run-time performance on par with it \cite{schwarz2026tpde}. Tamura et al.\ add ahead-of-time instrumentation to WebAssembly for cross-ISA checkpoint and restore, with an average execution overhead of 36\% \cite{tamura2025bringing}. Jiang et al.\ generate runtime performance test programs with a distinguishability measure \cite{jiang2025warpgen}, and Zeng et al.\ locate the instructions behind runtime performance issues by mutation-based inference \cite{zeng2026warpl}.
+
+\textbf{Cluster D: host interfaces and WASI.} Host interfaces and WASI system integration represent an increasingly important area of research. Mao et al.\ instrument WASI calls with eBPF and measure total time, startup, WASI time, and syscall time under I/O load \cite{mao2024ewapa}. Van Kenhove et al.\ add I2C and USB interfaces to WebAssembly, with at most 8\% overhead against native USB APIs and a runtime-initialization cost that matters at low latency \cite{vankenhove2025cyberphysical}. Seidler et al.\ run device drivers inside WebAssembly containers and report lower latency and overhead than user-level drivers \cite{seidler2025wasmio}. Ramesh et al.\ propose thin kernel interfaces for WebAssembly, arguing that the missing standard system interfaces slow adoption \cite{ramesh2025thin}. Jansen et al.\ integrate the WebAssembly Micro Runtime into a container runtime, reducing memory per container by 11\% to 78\% against existing WebAssembly runtimes \cite{jansen2025memory}.
+
+\textbf{Cluster E: methodology and statistics.} Methodological rigor and statistical validation have received considerable critical attention in systems research. Antunes and Hill survey reproducibility in high-performance computing \cite{antunes2024reproducibility}, and Pearce et al.\ define repeat, replicate, and reproduce for benchmarking runs \cite{pearce2025hpc}. Lema et al.\ compare deep-learning detectors with analysis of variance and Tukey tests on a small dataset, and they show that reported gains are often not significant \cite{lema2026benchmarking}. Mytkowicz et al.\ show that measurement setup can change conclusions \cite{mytkowicz2009wrong}, and Georges et al.\ set out statistically rigorous performance evaluation \cite{georges2007java}. The statistical methods are the Clopper--Pearson interval \cite{clopper1934use}, Welch's ANOVA \cite{welch1951comparison}, ridge regression \cite{hoerl1970ridge}, and the peaks-over-threshold generalized Pareto model \cite{davison1990exceedances}.
+
+\textbf{Cluster F: resource metering before WebAssembly.} The concept of resource metering predates WebAssembly, with extensive prior art in operating systems and virtual machines. Banga et al.\ separate the unit of resource accounting from the unit of protection in server operating systems \cite{banga1999resource}. In managed runtimes, JRes accounts CPU, memory, and network use per Java thread \cite{czajkowski1998jres}, and Binder, Hulaas, and Villaz\'on rewrite bytecode so that a program counts its own executed instructions and can be stopped when it exceeds a budget \cite{binder2001portable, hulaas2004program}. That is the design WebAssembly fuel follows, and those papers already note that an instruction count is a portable proxy for CPU time rather than a measure of it. Smart-contract platforms made the proxy a billing unit. Yang et al.\ compute a time-to-gas ratio for each EVM opcode from nanosecond-resolution execution traces on two machines, and find that the gas model captures I/O cost poorly and favours better-resourced nodes \cite{yang2019empirically}. Perez and Livshits report very little correlation between gas and CPU or memory use, and they generate contracts that process transactions on average 50 times more slowly than typical contracts \cite{perez2020broken}. Their search is the direct ancestor of the adversarial search in Section~\ref{sec:adversarial}. Static gas analyses bound the gas a contract can consume \cite{albert2019fumes, das2020exact, grech2018madmax}, and Chen et al.\ catalogue code patterns that waste gas \cite{chen2017underoptimized}; all of them bound gas, not time. Worst-case execution-time analysis addresses the time side and shows that a sound bound requires a model of caches and pipelines, not an operation count \cite{wilhelm2008wcet}. This work transfers the questions those studies asked about EVM gas and JVM instruction counts to WebAssembly fuel, where the meter is compiled into native code by interchangeable backends.
+
+Against this background, three distinct gaps in the literature motivate the experimental design of the present study:
+\begin{enumerate}
+\item \textbf{Absence of cross-backend fuel-to-time auditing.} Prior studies compare wall-clock speed, energy, and startup across runtimes \cite{jangda2019not, khan2026taxonomy, kakati2024cross}, or measure host resource exhaustion through WASI and WASIX \cite{yu2025resource}. To date, however, there has been no empirical investigation evaluating the fidelity with which a runtime's fuel meter tracks on-CPU time across frontend optimization levels and backend code generators. While this question has been examined for EVM gas \cite{yang2019empirically, perez2020broken}, where metering is interpreted, it remains unaddressed for instruction meters compiled into native machine code across distinct backends.
+\item \textbf{Unquantified WASI Preview 1 versus Preview 2 per-byte scaling.} Previous evaluations of WASI have largely focused on aggregate application performance or eBPF system call distributions \cite{mao2024ewapa, yu2026wasc}. To our knowledge, no prior study has systematically decomposed host-function calls, WASI Preview 1 (\texttt{wasm32-wasip1}), and Component Model Preview 2 (\texttt{wasm32-wasip2}) writes into fixed boundary overheads and marginal per-byte costs within an identical runtime engine.
+\item \textbf{Lack of load-gated multi-allocator recycling evaluation and empirical dynamic calibration.} Density studies of containers and sandboxes \cite{jansen2025memory, shillaker2020faasm} have not isolated per-lifecycle private dirty memory accumulation across on-demand and pooling allocators under verified wall-to-CPU contention constraints. Furthermore, although dynamic instrumentation \cite{titzer2024flexible} enables fine-grained opcode counting, no empirical research has determined whether such counts can calibrate away fuel-to-time dispersion across unseen workloads.
+\end{enumerate}
+\input{../tables/tab_taxonomy.tex}
+
+\section{Metrics and Models}
+\label{sec:metrics}
+\label{sec:models}
+The mathematical formulation of the evaluation metrics is defined as follows. Let a cell $c=(k,o)$ denote kernel $k$ compiled at optimization level $o$. For a single timed execution \texttt{run(reps)} denoted by $r$ in cell $c$, let $F(r)$ represent the fuel reported by the runtime and $C(r)$ the thread CPU time in nanoseconds. The unit cost of execution per fuel unit is defined as
+\begin{equation}
+\psi(r) = \frac{C(r)}{F(r)} \quad [\mathrm{ns\,per\,fuel\,unit}],
+\end{equation}
+and $\mu_\psi(c)$ denotes its mean across the timed replicates of $c$. The adversarial amplification factor of a metered runtime $b$ is defined as
+\begin{equation}
+\mathcal{A}_{\mathrm{adv}}(b) = \frac{\max_{c}\,\mu_{\psi}(b,c)}{\min_{c}\,\mu_{\psi}(b,c)}.
+\end{equation}
+A major advantage of this metric is that it captures the maximum factor by which an untrusted tenant can convert a fixed fuel budget into CPU time. Because this factor is determined by two extreme cells, we also report robust dispersion metrics, namely the ratio of the 95th to 5th percentile of $\mu_\psi$ and the interquartile ratio.
+
+Fuel represents a runtime-specific metering abstraction. In our experimental setup, Wasmer's metering middleware charges one unit per executed operator, WasmEdge's instruction counter tracks executed instructions, and Wasmtime reports its native consumed-fuel counter. Each counter is treated as the native fuel metric of its respective runtime, without assuming cross-engine equivalence.
+
+Linear-memory trap conformance is assessed as the proportion of test probes whose execution outcome conforms to the official specification, where graceful traps and specified return codes are both categorized as conforming. Confidence bounds are calculated using the exact Clopper--Pearson binomial interval \cite{clopper1934use}. Differences in execution time across optimization levels are evaluated using Welch's heteroscedastic ANOVA on log-transformed durations \cite{welch1951comparison}, with effect sizes reported as partial $\eta^2$ derived from the Welch $F$ statistic. Memory accumulation during sandbox recycling is estimated via the ordinary least squares (OLS) slope of private memory against lifecycle iterations, and latency tails are modeled using a generalized Pareto distribution fitted to exceedances over the 95th percentile \cite{davison1990exceedances}. The relationship between host-call latency and payload size is modeled as
+\begin{equation}
+T(s) = \alpha + \beta s,
+\end{equation}
+where $s$ denotes payload size in bytes, fitted via ordinary least squares with $t$-based confidence intervals.
+
+The calibration framework predicts the cost per fuel unit of a cell based on extracted static and dynamic features. Because $\mu_\psi$ is a product of factors (Section~\ref{sec:attribution}), the prediction target is $y_c=\log\mu_\psi(c)$, and a ridge regression with an unpenalized intercept is fitted on standardized features \cite{hoerl1970ridge}:
+\begin{equation}
+\hat{\mathbf{w}} = \arg\min_{w_0,\mathbf{w}}\; \lVert \mathbf{y} - w_0\mathbf{1} - X \mathbf{w} \rVert_2^2 + \lambda \lVert \mathbf{w} \rVert_2^2 .
+\end{equation}
+Four feature sets are compared: none (the intercept alone, representing an uncalibrated meter with a single global scale); the shares of thirteen operator classes in the static disassembly; the shares of the same classes among dynamically executed instructions, measured via dynamic instrumentation (Section~\ref{sec:methods}); and the logarithms of four kperf event rates per fuel unit, both independently and combined with the logarithm of retired native instructions per fuel unit. The performance score is the root-mean-square residual of $y$, which is formally bounded by Proposition~\ref{prop:linear_bound}; $e^{\mathrm{RMS}}$ denotes the typical multiplicative factor by which a calibrated budget deviates from true execution time. Data partitions are held out under two evaluation regimes: leave-one-cell-out (LOCO) retains the remaining three compilation builds of the target kernel within the training set, allowing the model to recognize kernel-specific patterns; in contrast, leave-one-kernel-out (LOKO) withholds all four builds of the target kernel, providing an unbiased assessment for previously unseen modules. Hyperparameter optimization for ridge strength is conducted within each training fold via an inner leave-one-kernel-out search over $\lambda\in\{10^{-4},\dots,10^{2}\}$, ensuring that no held-out observation influences model training.
+
+\subsection{Microarchitectural decomposition and a linear recalibration bound}
+\label{subsec:decomposition}
+Fuel counts executed operations, while CPU time depends on the cycles those operations take. This subsection writes the relation explicitly, so that the limits of any calibration based on operator classes can be stated and checked against the data. Let $\mathcal{D}$ index the $D$ operator classes, let $N_{c,d}$ be the executed count of class $d$ in cell $c$, and let $N_c=\sum_{d}N_{c,d}$. Let $N_{c,\mathrm{mem}}$ and $N_{c,\mathrm{br}}$ count memory and branch operations. On an out-of-order core at effective clock $f_{\mathrm{eff}}$, the on-CPU time of a cell, Eq.~\eqref{eq:cpi_decomp}, is the sum of base execution cycles and stall cycles from the memory hierarchy and from branch recovery:
+\begin{equation}\label{eq:cpi_decomp}
+C(c)=\frac{1}{f_{\mathrm{eff}}}\Bigl(\sum_{d=1}^{D}N_{c,d}\,\gamma_{0,d}+N_{c,\mathrm{mem}}\sum_{\ell\in\{\mathrm{L1D},\mathrm{L2},\mathrm{SLC}\}}m_{c,\ell}\,\tau_{\ell}+N_{c,\mathrm{br}}\,b_{c,\mathrm{miss}}\,\tau_{\mathrm{br}}\Bigr).
+\end{equation}
+Here $\gamma_{0,d}$ is the base cycle cost of class $d$ when every access hits in L1, $m_{c,\ell}\in[0,1]$ is the miss rate of cell $c$ at level $\ell$ with penalty $\tau_{\ell}$, and $b_{c,\mathrm{miss}}$ is the branch misprediction rate with flush penalty $\tau_{\mathrm{br}}$. Dividing by $N_c$ and writing $p_{c,d}=N_{c,d}/N_c$, $p_{c,\mathrm{mem}}=N_{c,\mathrm{mem}}/N_c$, and $p_{c,\mathrm{br}}=N_{c,\mathrm{br}}/N_c$ for the dynamic shares gives the cost per fuel unit $\mu_\psi(c)=C(c)/N_c$ as
+\begin{equation}\label{eq:psi_decomp}
+\mu_\psi(c)=\underbrace{\frac{1}{f_{\mathrm{eff}}}\sum_{d=1}^{D}p_{c,d}\,\gamma_{0,d}}_{\text{class-mix term}}+\underbrace{\frac{1}{f_{\mathrm{eff}}}\Bigl(p_{c,\mathrm{mem}}\sum_{\ell}m_{c,\ell}\,\tau_{\ell}+p_{c,\mathrm{br}}\,b_{c,\mathrm{miss}}\,\tau_{\mathrm{br}}\Bigr)}_{\text{state-dependent stall residual }\Delta(c)}.
+\end{equation}
+The class-mix term is linear in the shares. The stall residual depends on miss and misprediction rates, which describe the memory and branch state a cell produces and not the operators it executes.
+
+Stack a per-cell target, either $\mu_\psi$ or $\log\mu_\psi$, in a vector $\boldsymbol{\mu}$, and let $\mathbf{P}\in\mathbb{R}^{n\times(D+1)}$ be the design matrix whose first column is a vector of ones and whose remaining columns are the class shares. Let $\mathbf{P}_{\mathrm{mix}}$ hold the share columns alone, let $\boldsymbol{\Delta}$ stack the stall residuals, and let $\mathbf{H}$ be the orthogonal projector onto the column space of $\mathbf{P}$. Part (i) below holds for either target and any design matrix with an intercept column, including one built from event rates; part (ii) uses the additive form of Eq.~\eqref{eq:psi_decomp} and so refers to $\mu_\psi$ itself. The effective clock is treated as common to all cells; the per-cell median varies by less than $2\%$ in the gated campaign, and variation by cell would enter $\boldsymbol{\Delta}$.
+
+\begin{proposition}[Linear recalibration bound]\label{prop:linear_bound}
+(i) For every $\mathbf{u}\in\mathbb{R}^{D+1}$,
+\begin{equation*}
+\|\boldsymbol{\mu}-\mathbf{P}\mathbf{u}\|_2^2\ \ge\ \|(\mathbf{I}-\mathbf{H})\boldsymbol{\mu}\|_2^2=(1-R^2)\,\|\boldsymbol{\mu}-\bar{\mu}\mathbf{1}\|_2^2,
+\end{equation*}
+with equality when $\mathbf{P}\mathbf{u}=\mathbf{H}\boldsymbol{\mu}$, where $R^2$ is the in-sample coefficient of determination of the least-squares fit of $\boldsymbol{\mu}$ on $\mathbf{P}$ and $\bar{\mu}$ is the mean of $\boldsymbol{\mu}$. Consequently the root-mean-square residual of every linear recalibration on $\mathbf{P}$ is at least $\mathrm{sd}(\boldsymbol{\mu})\sqrt{1-R^2}\sqrt{(n-1)/n}$.
+(ii) Under Eq.~\eqref{eq:psi_decomp}, $\boldsymbol{\mu}=\mathbf{P}_{\mathrm{mix}}\mathbf{w}+\boldsymbol{\Delta}$ for a fixed weight vector $\mathbf{w}$, and $(\mathbf{I}-\mathbf{H})\boldsymbol{\mu}=(\mathbf{I}-\mathbf{H})\boldsymbol{\Delta}$. The part of the cost per fuel unit that no class-count recalibration can remove is therefore the part of the stall residual that lies outside the span of the class shares.
+\end{proposition}
+
+\begin{proof}
+For (i), $\mathbf{H}\boldsymbol{\mu}-\mathbf{P}\mathbf{u}$ lies in the column space of $\mathbf{P}$, and $(\mathbf{I}-\mathbf{H})\boldsymbol{\mu}$ is orthogonal to that space. The Pythagorean identity gives $\|\boldsymbol{\mu}-\mathbf{P}\mathbf{u}\|^2=\|(\mathbf{I}-\mathbf{H})\boldsymbol{\mu}\|^2+\|\mathbf{H}\boldsymbol{\mu}-\mathbf{P}\mathbf{u}\|^2$, and the second term vanishes at $\mathbf{P}\mathbf{u}=\mathbf{H}\boldsymbol{\mu}$. Because the first column of $\mathbf{P}$ is $\mathbf{1}$, $(\mathbf{I}-\mathbf{H})\mathbf{1}=\mathbf{0}$, so $\|(\mathbf{I}-\mathbf{H})\boldsymbol{\mu}\|^2=\|\boldsymbol{\mu}-\bar{\mu}\mathbf{1}\|^2-\|\mathbf{H}(\boldsymbol{\mu}-\bar{\mu}\mathbf{1})\|^2$, and the last term equals $R^2\|\boldsymbol{\mu}-\bar{\mu}\mathbf{1}\|^2$. The residual sum of squares is therefore at least $(1-R^2)$ times the total sum of squares. Dividing the residual sum of squares by $n$ and the total sum of squares by $n-1$, and taking square roots, gives a root-mean-square residual of at least $\mathrm{sd}(\boldsymbol{\mu})\sqrt{1-R^2}\sqrt{(n-1)/n}$. For (ii), $\mathbf{P}_{\mathrm{mix}}\mathbf{w}$ lies in the column space of $\mathbf{P}$, so $\mathbf{I}-\mathbf{H}$ annihilates it.
+\end{proof}
+
+Proposition~\ref{prop:linear_bound} is a statement about in-sample fits, and it holds whatever the quality of the features as predictors: no linear recalibration on a given feature set can do better on the cells it was fitted to, so an out-of-sample score can approach the bound but not, in expectation, beat it. Section~\ref{sec:rq5} reports the bound and the LOCO and LOKO scores in the same units.
+
+\section{Testbed and Telemetry Architecture}
+\label{sec:methods}
+\subsection{Hardware, toolchain, and corpus}
+All experiments ran on an 8-core 64-bit ARM system-on-chip (ARMv8.6-A architecture) in a POSIX/Unix environment. The processor comprises four out-of-order performance cores (nominal clock 4.05\,GHz) and four efficiency cores (nominal clock 2.75\,GHz). The performance cluster has a 128\,KiB L1 data cache and a 16\,MiB shared L2 cache, and the efficiency cluster has a 64\,KiB L1 data cache and a 4\,MiB shared L2 cache. We state these capacities because the cache-capacity steps in the host-call sweep (Section~\ref{sec:rq3}) depend on them, and the counters described below access the host operating system's kernel PMU interfaces. Kernels were compiled with LLVM 23.1.3 to the \texttt{wasm32-wasip1} target against wasi-libc and linked with lld. For the experiments reported here the corpus was rebuilt with LLVM 23.1.4; every rebuilt module has the same size as its predecessor, and Wasmtime reports the same fuel for it in all 200 cells. The WASI comparison (Section~\ref{sec:rq3}) also uses a \texttt{wasm32-wasip2} build of the same source. Every module exports \texttt{run(reps)}, which executes the workload, and \texttt{check()}, which returns an output checksum.
+
+The 30 PolyBench/C 4.2.1 kernels are used unmodified at the MEDIUM dataset. A generated wrapper routes PolyBench's checksum dump into a hash so that output equality can be checked across runtimes. The ten integer and cryptographic kernels are CRC-32, Collatz, division and remainder, cache thrashing, FNV-1a, branch misprediction, quicksort, substring search, SHA-256, and ChaCha20. SHA-256 agrees with \texttt{hashlib} on the generated message, and the ChaCha20 block agrees with the RFC~7539 test vector. The ten linear-memory kernels cover streaming copy, pointer chasing, strided access at 64\,B and 4\,KiB, reduction, binary search, transposition, hash-table probing, growth to a fixed working set, and address wrap-around. These are memory-behavior kernels. They do not sweep WASI system calls. Every kernel is built at $-$O0, $-$O2, $-$O3, and $-$Oz, giving 200 cells. Appendix~\ref{app:corpus} gives the module sizes. A validation pass confirms that \texttt{check()} is deterministic and agrees across the four levels for every kernel, and that the SHA-256 and ChaCha20 kernels match their reference values.
+
+\subsection{Runtimes}
+Table~\ref{tab:campaign} lists the twelve timed configurations. Wasmtime 50.0.0 runs Cranelift and Winch through a Rust harness with fuel consumption enabled. Wasmer 7.5.0 runs Singlepass, Cranelift, and LLVM 22.1, each unmetered and metered with the operator-counting middleware. WasmEdge 0.18.0 runs in interpreter mode and in ahead-of-time mode, compiled with \texttt{wasmedgec} at optimization level 3 with the instruction counter enabled. WAMR (iwasm 2.4.5) runs its interpreter. Node.js 26.11.1 (V8 14.6) is a timing-and-counter engine without a fuel meter. Every runtime executes the same plan of cells and reps, calibrated once with Cranelift so that one call takes about 20\,ms.
+
+\subsection{Telemetry}
+Each timed replicate records thread CPU time (\texttt{CLOCK\_THREAD\_CPUTIME\_ID}), wall time, the runtime's fuel count where one exists, a checksum, and hardware counters. The cross-runtime campaign reads retired instructions and core cycles from \texttt{proc\_pid\_rusage} with \texttt{RUSAGE\_INFO\_V4}, which needs no privileges; the V8 harness reads the same counters through a small N-API addon.
+
+For the attribution and adversarial experiments (Sections~\ref{sec:attribution} and \ref{sec:adversarial}) a second Wasmtime harness programs the processor's configurable hardware performance counters through the kernel PMU profiling interface, which requires elevated privileges. It reads, per thread and around each \texttt{run(reps)} call, fixed cycles and retired instructions and six architectural events from the core event database: retired L1D load misses, retired mispredicted branches, retired L1D TLB misses, L2 TLB misses, cycles in which an old load or store waits on an L1D miss with nothing issued, and cycles in which the map unit is stalled by dispatch back-pressure. The core exposes no direct L2 or system-level-cache miss event, so the memory hierarchy beyond L1 is observed through the miss-wait cycles and the TLB events. We validated the counters on native microbenchmarks with known counts (Table~\ref{tab:pmu_validation}). A loop of exactly four instructions per iteration retires $1.0001$ times the expected count; a data-dependent branch on random bits mispredicts on $49.999\%$ of executions; and a pointer chase over a 256\,MiB random cycle misses L1D on $99.99\%$ of loads, against 9 misses in $2\times10^{7}$ loads when the cycle fits in 16\,KiB.
+
+\input{../tables/tab20.tex}
+
+Dynamic opcode counts come from a separate, untimed pass. Each module is disassembled, and a stack-neutral increment of a per-class global is placed before every instruction in the function bodies. The instrumented text is reassembled and run once with the cell's timing reps. The run returns the same value as the uninstrumented module in every cell, which was checked before the counts were used. The dynamic total agrees with Wasmtime's fuel to within $0.03\%$ in median.
+
+\subsection{Protocol and load control}
+\label{sec:protocol}
+Each cell receives two warm-up calls, followed by timed replicates. The fast runtimes execute 100 replicates per cell, Singlepass and WAMR execute 10, and the WasmEdge interpreter executes 3 given its execution overhead; Table~\ref{tab:campaign} lists replicate counts and confidence intervals across all configurations.
+
+Our original campaign gated each step on a 1-minute load of at most 4 but logged load only every 5\,s, independently of the replicates, and that log showed a median of 4.35 over the campaign (Appendix~\ref{app:load}). We therefore re-ran every timed experiment in this paper under a stricter protocol. The kperf harness records the 1-minute load immediately before every replicate and waits, before each cell, until the load is at or below 3.0 on the 8-core machine. The cross-runtime runners, which are separate programs, are wrapped so that a sampler logs the load every 2\,s and each runner's per-cell completion line is time-stamped on arrival; every cell's execution window is then joined to the load samples it overlapped. Each step starts only below the same gate. Section~\ref{sec:threats} reports the resulting load distributions.
+
+The operating system scheduler offers no hard core pinning. The PMU harness raises its timed thread to the highest user-interactive quality-of-service class, which steers it to a performance core, and it records cycles and CPU time for every replicate, so a replicate that ran on an efficiency core (about 2.75\,GHz on this part, against about 4.05\,GHz for a performance core) is visible as a low effective clock. The wall-to-CPU ratio of each replicate shows whether the timed thread was descheduled; it does not show co-running load, which is why the load is logged separately.
+
+\input{../tables/tab01.tex}
+
+\subsection{Recycling and memory measures}
+The recycling harness reads process memory telemetry at each checkpoint, tracking the task's private anonymous memory alongside \texttt{phys\_footprint}. Anonymous private pages are dirty by definition, providing a precise per-process measure of private dirty memory. In every evaluation run, the two fields exhibit identical trajectories.
+
+\subsection{Artifact and reproduction}
+The corpus builder compiles each kernel at each level and writes the manifest of 200 modules. The timing plan records the reps calibrated for each cell, and each runtime runner writes one row per replicate with the cell key, level, group, replicate, reps, fuel, CPU and wall time, checksum, cycles, and instructions. The dynamic counter writes one row per cell with the executed count of each opcode class. The Python analysis reads those rows, computes the cell summaries, the amplification factors, the Welch tests, the leave-one-out calibrations, and the parametric fits, and regenerates the figures and tables in this paper from the same files. The Wasmtime and Wasmer runners are Rust, the WasmEdge and WAMR runners are C against the vendor headers, and the V8 harness is JavaScript with a native counter addon. The compiler is LLVM 23.1.3, linked with lld against wasi-libc. The companion reproduction suite runs the timed campaign and regenerates every table and figure in this manuscript from the same raw files (Appendix~\ref{app:repro}).
+
+\begin{center}
+\fbox{\parbox{0.92\columnwidth}{\textbf{Repository and archive.} The benchmarking harnesses, raw per-replicate telemetry traces, compiled WebAssembly modules, generated figures, and LaTeX tables are available in the study repository at \url{https://github.com/RaffeOP/papers/tree/main/R3}. All software is released under the MIT License.}}
+\end{center}
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Fuel drift and backend dependence (RQ1)}
+\label{sec:rq1}
+All twelve configurations returned identical checksums in every one of the 200 cells, so the timing comparisons compare the same computation. Fuel is deterministic within a cell, with one exception. Four PolyBench heat-3d cells alternate between two adjacent values one unit apart, in a few replicates. A fresh-instance test reproduces the steady value. We treat the jitter as a per-instance state effect of magnitude below $10^{-9}$ relative.
+
+Under Cranelift the amplification factor is $\mathcal{A}_{\mathrm{adv}}=38.3$ in the gated cross-runtime campaign and $34.1$ in the independent kperf campaign, and the coefficient of variation of $\mu_\psi$ across cells is $0.93$ and $0.92$. The extreme ratio rests on two cells, and the one that differs between the runs, \texttt{mem\_pointer\_chase} at $-$O2, is the most memory-latency-bound cell in the corpus; its mean differs by $11\%$ between the runs while the per-cell median time ratio of the two runs is $0.999$ (interquartile range $0.987$ to $1.015$). The robust spreads agree: the 95th-to-5th percentile ratio is $8.9$ and $8.8$ and the interquartile ratio $2.5$ in both. For Winch the three measures are $11.1$, $3.9$, and $1.6$, and for WasmEdge AOT $35.4$, $8.0$, and $2.0$. The bulk of the cells therefore spread by roughly an order of magnitude, and a few extreme cells widen that to between 34 and 38. Within each optimization level the ratio of the most to least expensive kernel is $13.0$ at $-$O0, $20.5$ at $-$O2, $19.9$ at $-$O3, and $12.4$ at $-$Oz. Figure~\ref{fig:psi} shows $\mu_\psi$ for each kernel and level, and Figure~\ref{fig:psibylevel} shows the Cranelift and Winch distributions by level. Appendix~\ref{app:kernels} lists every kernel's value, and Appendix~\ref{app:all_cells} lists every cell.
+
+The fuel reported for the same kernel differs between $-$O0 and $-$O2 by factors from $0.36$ to $6.5$. Fuel also depends on the backend. Winch and Cranelift report different fuel for the same module in 20 cells above numerical noise, all at $-$O2 and $-$O3 (Table~\ref{tab:backend_disagreement}), across ten kernels: eight PolyBench kernels and two memory kernels (\texttt{mem\_stream\_copy} and \texttt{mem\_hashtable}). The relative differences run from $0.04\%$ to $16.7\%$, and four further \texttt{pb\_heat\_3d} cells differ by eight units. We identified the cause exactly. At $-$O2 and $-$O3 Clang lowers copy and initialization loops, and wasi-libc's \texttt{memcpy} and \texttt{memset}, to the bulk-memory operators \texttt{memory.copy} and \texttt{memory.fill}. The Cranelift translator charges these one fuel unit per byte; the Winch code generator charges only the flat per-operator cost (Section~\ref{sec:adversarial}). Re-running Cranelift with Wasmtime's per-byte bulk costs set to zero (\texttt{Config::operator\_cost}) reproduces Winch's fuel exactly in all 200 cells, and in each of the 24 cells that differ, the difference equals the bytes the bulk operators move: for \texttt{mem\_stream\_copy} at $-$O2 it is $100{,}663{,}296$ units, 24 repetitions of one 4\,MiB copy. The backend disagreement is therefore not noise and not a difference in how the two compilers count ordinary operators, which they count identically; it is one accounting rule that one backend implements and the other omits. The WasmEdge interpreter's instruction counter has $\mathcal{A}_{\mathrm{adv}}=1.6$ and a coefficient of variation of $0.08$, so its cost per counted instruction is much more uniform than Wasmtime's. The meters are not interchangeable.
+
+\input{../tables/tab07.tex}
+
+The spread has a structure that the kernel names expose. The median cost of one fuel unit is $0.080$\,ns for the memory kernels, $0.047$\,ns for the integer kernels, and $0.033$\,ns for PolyBench. Taking each kernel's median across the four levels, the two extremes are \texttt{pb\_fdtd\_2d} at $0.020$\,ns and \texttt{mem\_pointer\_chase} at $0.29$\,ns, a factor of $15$. We tested whether the instruction mix explains this. The share of dynamically executed memory operations is negatively rank-correlated with cost per fuel unit ($\rho=-0.48$, $p<10^{-12}$), the opposite of what a memory-hierarchy account predicts if it is read as ``more memory operations, more cost''. Section~\ref{sec:attribution} resolves the sign with hardware counters: the operative variable is how often loads miss, not how many loads there are. A host that charges fuel alone under-charges tenants whose code is slow per operator, and the spread across cells is the size of that error for benign code.
+
+PolyBench at the MEDIUM size is a numerical benchmark, and a platform's tenants mostly run request handlers. We therefore timed five serverless-style kernels at the same four levels: JSON request parsing, Base64 encoding and decoding, HTTP request routing against a 64-route table, LZ77 compression with decompression, and HMAC-SHA256 verification of JWT-sized tokens, the last checked against RFC~4231 (Table~\ref{tab:serverless}). Under Cranelift their cost per fuel unit runs from $0.029$ to $0.065$\,ns, a spread of $2.2$, and lies between percentiles 31 and 74 of the corpus cells; under Winch it lies between percentiles 48 and 97. Request-handling code thus sits inside the benign distribution rather than at its edges, and the corpus spread is not an artifact of its numerical kernels; it is also no protection, because the adversarial kernels of Section~\ref{sec:adversarial} are no harder to write than these.
+
+\input{../tables/tab25.tex}
+
+Table~\ref{tab:anova} summarizes Welch's ANOVA of CPU time across the four levels, by group, and Appendix~\ref{app:anova} lists the test for every kernel. All 50 kernels show a significant level effect at $p<0.05$. The median partial $\eta^2$ is $0.98$ for the integer kernels, $0.99$ for the memory kernels, and $0.97$ for PolyBench, with minima of $0.70$, $0.78$, and $0.66$.
+
+\input{../tables/tab02.tex}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{../figures/fig01.pdf}
+\caption{Mean cost of one fuel unit ($\psi$, ns per unit) per kernel and optimization level for Wasmtime Cranelift, 100 replicates per cell.}
+\label{fig:psi}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{../figures/fig02.pdf}
+\caption{Distribution of per-cell $\psi$ by optimization level for Cranelift (left of each group) and Winch (right).}
+\label{fig:psibylevel}
+\end{figure}
+
+Figure~\ref{fig:fuelvstime} relates metered fuel to measured time. Across the 200 Cranelift cells, the Pearson correlation between fuel and mean CPU time is $r=0.73$. A static count of the module is a weaker predictor, with $r=0.27$. The dynamically executed total is almost identical to Wasmtime's fuel: the correlation between them is $0.9999$ and their median ratio is $1.0003$. The dynamic total therefore carries the same information as fuel, and the calibration results below follow from that.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{../figures/fig03.pdf}
+\caption{Metered fuel against mean CPU time for each Cranelift cell.}
+\label{fig:fuelvstime}
+\end{figure}
+
+Metering has a cost of its own. For Wasmer's Cranelift backend, the metered build runs at a median of $1.16$ times the unmetered build's time for the same cell, with an interquartile range of $1.03$ to $1.40$. The overhead therefore varies by cell, and a single multiplicative correction would misstate it for some kernels. Wasmer's metered fuel matches Wasmtime's Cranelift fuel with a median ratio of $1.0003$ and a range of $0.83$ to $1.09$. Metered Wasmer fuel is identical across its Singlepass, Cranelift, and LLVM backends in all 200 cells, so the operator count is set by the frontend and not by the backend.
+
+Figure~\ref{fig:engine} and Table~\ref{tab:runtime_summary} compare runtimes with Cranelift as the reference, using median per-cell time ratios over the same 200 cells. The fastest configurations on this machine are WasmEdge AOT at $0.77$, V8 at $0.84$, Wasmer LLVM at $0.86$, and Wasmer Cranelift at $0.88$. Metered Wasmer Cranelift is at $1.01$, near parity with unmetered Wasmtime. Winch is at $2.11$, WAMR at $9.3$, Singlepass at $11.7$, and the WasmEdge interpreter at $79$. The spread within a runtime is large. Singlepass's interquartile range runs from $1.6$ to $32$ times Cranelift across cells, so a single ratio hides how much the kernel decides the answer. Appendix~\ref{app:ratios} breaks the comparison down by level.
+
+\input{../tables/tab06.tex}
+
+The hardware counters agree with this picture. The effective clock, computed as cycles per CPU nanosecond, is between $3.73$ and $3.78$\,GHz for every runtime's per-cell median. Retired instructions per cycle range from $1.3$ for Singlepass to $5.5$ for Winch. Winch executes $2.4$ times as many instructions per call as Cranelift at $2.1$ times the cycles (medians over cells), so its higher IPC accompanies more work rather than faster execution, and it is $2.1$ times slower in time.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{../figures/fig04.pdf}
+\caption{Per-cell median time ratio relative to Wasmtime Cranelift for each other runtime configuration (log scale; boxes are quartiles, whiskers are the non-outlier range). Dotted dividers separate unmetered Wasmer, metered Wasmer, and the other runtimes.}
+\label{fig:engine}
+\end{figure}
+
+\subsection{Why the cost per fuel unit varies}
+\label{sec:attribution}
+Section~\ref{sec:rq1} shows how far the cost of a fuel unit moves; this subsection measures why, with the validated kperf counters on the 200 Cranelift cells. Writing $I_c$ for the native instructions a cell retires,
+\begin{equation}\label{eq:psi_factor}
+\mu_\psi(c)=\frac{I_c}{F_c}\cdot\frac{\mathrm{CPI}_c}{f_{\mathrm{eff}}},
+\end{equation}
+so the variance of $\log\mu_\psi$ splits exactly into a code-generation factor, native instructions per fuel unit, and a microarchitectural factor, cycles per native instruction, plus their covariance. The effective clock is nearly constant ($3.77$\,GHz median, Section~\ref{sec:threats}) and contributes little. Table~\ref{tab:attribution} gives the split. The CPI factor carries $84\%$ of the variance of $\log\mu_\psi$ and the instruction factor $13\%$, and the rank correlation between $\mu_\psi$ and retired instructions per cycle is $-0.91$ (Figure~\ref{fig:attribution}a). The fuel meter's error is therefore mostly an error about how long each native instruction takes, not about how many native instructions a fuel unit expands into.
+
+The CPI factor follows the memory hierarchy in part. Four event rates per fuel unit, L1D load misses, branch mispredictions, and L1D and L2 TLB misses, explain $40\%$ of the variance of $\log\mu_\psi$ in a linear fit, and $53\%$ together with the instruction factor. The most expensive cell, \texttt{mem\_pointer\_chase} at $-$O2, retires $0.54$ instructions per cycle and spends $35\%$ of its cycles waiting on an L1D miss with nothing else to issue; the cheapest, \texttt{pb\_heat\_3d} at $-$O0, retires $6.0$ instructions per cycle with no measurable miss stall. The account is not complete. \texttt{pb\_seidel\_2d} is among the eight most expensive cells, yet it misses L1D on $0.06\%$ of fuel units and never waits on memory: its in-place Gauss--Seidel update is a chain of dependent floating-point additions, so its CPI reflects operation latency, which no miss counter records. Roughly half the variance of $\log\mu_\psi$ thus has a measured microarchitectural cause, and dependency-chain latency accounts for at least part of the rest.
+
+The counters also resolve the negative correlation between the memory-operator share and cost reported in Section~\ref{sec:rq1}. At $-$O0, Clang keeps locals in the linear-memory shadow stack, which doubles the memory-operator share (median $0.26$ against $0.12$ at $-$O2) while those accesses hit L1D: the median cell misses on $0.2\%$ of Wasm loads at $-$O0 against $2.2\%$ at $-$O2. On a wide core that issues several loads per cycle, an L1-resident load is among the cheapest operators, so a larger memory share lowers the cost per fuel unit. What raises it is the miss rate per load, whose rank correlation with $\mu_\psi$ is $+0.39$. The memory-hierarchy explanation stands, but the operative variable is how often loads miss, not how many loads there are.
+
+\input{../tables/tab21.tex}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig09.pdf}
+\caption{Microarchitectural attribution over the 200 Cranelift cells of the gated kperf campaign. (a) Cost per fuel unit against cycles per retired native instruction. (b) Cost per fuel unit against retired L1D load misses per $10^3$ fuel units; cells with no counted miss are drawn at $10^{-3}$.}
+\label{fig:attribution}
+\end{figure}
+
+\subsection{Adversarial worst case}
+\label{sec:adversarial}
+The factor of Section~\ref{sec:rq1} is a spread over benign kernels. A tenant who wants more CPU than its fuel budget pays for will not run PolyBench; it will write the code that is slowest per fuel unit. Following the search of Perez and Livshits for EVM gas \cite{perez2020broken}, we searched a parameterized space of kernels for that code. Each kernel is hand-written WebAssembly text with the corpus interface, and one-time setup runs in the warm-up calls. The space has five families chosen from the operators that fuel charges as one unit and that can take many cycles: dependent pointer chasing over a random cycle (Sattolo's algorithm), with working sets from 16\,KiB to 1\,GiB, strides of one cache line or one 16\,KiB page, and 1, 4, 16, or 64 loads nested in one expression so that loop bookkeeping is amortized; dependent chains of integer and floating-point arithmetic of increasing latency; a data-dependent branch on pseudo-random bits; \texttt{call\_indirect} through tables of 2 and 64 targets; and \texttt{memory.copy} and \texttt{memory.fill} of 64\,B to 4\,MiB. The search is a grid over these parameters, 39 kernels in all, each timed for 30 gated replicates with the kperf counters under Cranelift and under Winch. It is a structured search, not an exhaustive one, so its maximum is a lower bound on the true worst case. Table~\ref{tab:adversarial} gives every kernel and Figure~\ref{fig:adversarial} plots them against the benign range.
+
+Under Cranelift the worst kernel is the pointer chase over 1\,GiB with 64 nested loads: $93.8$\,ns per fuel unit, against $0.36$\,ns for the most expensive benign cell and $0.011$\,ns for the cheapest. The adversarial factor over the benign maximum is $260$, and over the benign minimum $8{,}879$, where the benign factor in the same run was $34.1$. The counters show why. Each hop misses L1D (0.90 misses per fuel unit, one per load), and the core waits on that miss in $89\%$ of its cycles while retiring $0.016$ instructions per cycle. The chase grows in three steps as the working set passes the L1D, the 16\,MiB L2, and the reach of the L2 TLB (Figure~\ref{fig:adversarial}a), and nesting the loads removes the loop's per-hop fuel, raising the cost from $12.6$ to $93.8$\,ns per unit at 1\,GiB. Nothing in this kernel is exotic: it is the access pattern of a hash join or a linked-structure traversal. The arithmetic chains, branches, and indirect calls are expensive per operator but stay within $1.5\times$ of the benign maximum.
+
+\textbf{Bulk-memory operators expose a backend difference.} Wasmtime 50 charges \texttt{memory.copy} and \texttt{memory.fill} one fuel unit per byte when Cranelift compiles them, so under Cranelift these kernels are, from 4\,KiB upward, the cheapest per unit in the whole study ($0.010$ to $0.016$\,ns). Under Winch the same modules consume a constant 14 fuel units per bulk operation regardless of its length: fuel per repetition is 903 units for 64 copies of 64\,B and 904 for 64 copies of 4\,MiB. The cost per fuel unit therefore grows linearly with the length the tenant chooses, reaching $7{,}518$\,ns at 4\,MiB, $15{,}673$ times the most expensive benign Winch cell; a larger length raises it further, up to the size of linear memory. The Winch code generator in this release adds only the per-operator constant to the fuel counter (\texttt{winch-codegen} 50.0.0, \texttt{codegen/mod.rs}), whereas the Cranelift translator charges the per-byte cost before each bulk operation. On Winch, fuel does not bound the CPU time of a module that uses bulk memory at all. The same omission is the entire source of the benign Winch--Cranelift disagreement of Section~\ref{sec:rq1}: with per-byte costs disabled, the two backends agree to the unit on all 200 corpus cells. This is the strongest instance of the paper's thesis that fuel is a property of the backend, not of the module.
+
+\input{../tables/tab22.tex}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig10.pdf}
+\caption{Adversarial search against the benign range (shaded: smallest to largest Cranelift corpus cell). (a) Pointer chase under Cranelift by working set, stride, and number of nested loads per expression. (b) The other operator families under Cranelift and Winch; the bulk-memory kernels under Winch are charged a constant per operation.}
+\label{fig:adversarial}
+\end{figure}
+
+\subsection{Linear-memory boundary (RQ2)}
+\label{sec:rq2}
+Table~\ref{tab:boundary} reports trap conformance for six configurations, each probed 800 times across eight operations. Appendix~\ref{app:rq2} gives the outcome counts for each probe. The configurations vary the guard reservation (2\,GiB default, 64\,KiB, and zero), force explicit bounds checks, and remove growth reservation. Every trial runs in a fresh child process, so a crash is recorded as a host outcome and does not end the audit. All 4{,}800 outcomes conform: 3{,}000 specified returns and 1{,}800 graceful traps, with no silent corruption and no host crash. The exact 95\% lower bound on conformance is $0.995$ for each configuration. Table~\ref{tab:boundary} gives the intervals.
+
+The eight probes fall into three classes. Growth probes call \texttt{memory.grow} by one page, by $\mathrm{MAX}-1$ pages, and by $\mathrm{MAX}=65{,}536$ pages, which is 4\,GiB and exceeds the maximum from the current size. The classifier checks the returned value against the size the specification computes. Boundary-store probes write a word at the last valid address, which must succeed, and at one byte past the end, which must trap. Boundary-load probes read from \texttt{0xFFFFFFFC}, from \texttt{0x80000000}, and from address zero. The first two must trap, and the third is an in-bounds control that must return its value. The control matters because a configuration that traps every access would otherwise score as conforming. Every configuration passed all three classes.
+
+Single-operation probes on a fresh instance are a ceiling result: they check the specified semantics at the edges of linear memory but not the states a sequence of operations reaches. We therefore added two regimes, run in a Rust embedder of the same Wasmtime release (Table~\ref{tab:rq2_compound}). In the compound regime each trial is a seeded sequence of 40 operations on one instance whose memory is declared with a maximum of 1{,}024 pages: grows, a quarter of them past the maximum; loads and stores within 8 bytes of the current end and at high addresses; and \texttt{memory.fill} and \texttt{memory.copy} ranges that straddle the end. A host-side shadow copy of memory supplies the specified outcome of every step, and the specification requires that an out-of-bounds bulk operation trap without writing any byte. After every step we check the trap, the returned value, and the memory size; at the end of the trial we compare the whole of linear memory with the shadow. The same 600 sequences run under the six guard configurations and under the pooling allocator. All 4{,}200 trials conform: 168{,}000 steps, of which 94{,}388 had to trap or fail, with every trapped bulk operation leaving memory unchanged and every instance remaining usable after its traps. To check that the oracle can detect a violation, we ran it with an off-by-one bounds rule; 49 of 140 trials then failed.
+
+In the concurrent regime, eight threads each try to hold 16 tenants on a pool of 64 memory slots, admitting and dropping tenants at random over 1{,}600 attempts. Each admitted tenant grows its memory to between 1 and 16 pages, checks that every byte it can see is zero, fills its memory with a tenant-specific value, and verifies that value when it is dropped. Of the 1{,}600 attempts, 770 were admitted and 830 were refused with an instantiation error and no host fault; no tenant ever saw a non-zero byte in a reused slot, and no tenant's pattern changed while it was live.
+
+These regimes cover sequences, bulk operators, slot reuse, and pool exhaustion, which the single probes do not. They do not cover adversarial timing, such as a signal arriving during a trap, multi-memory modules, or memories larger than 64\,MiB in the pool, and 600 conforming trials per configuration rule out a per-trial failure rate above $0.61\%$ at 95\% confidence, not rarer failures.
+
+\input{../tables/tab23.tex}
+
+\input{../tables/tab03.tex}
+
+\subsection{Host-call and WASI boundary (RQ3)}
+\label{sec:rq3}
+The host-call benchmark times one imported function that receives a pointer and length, copies the payload out of linear memory, and validates it as UTF-8; the native baseline performs the same copy and validation on a host buffer. A third side calls the import with length zero and does no host work, which measures the guest-to-host transition directly. The earlier version of this study ran the benchmark in Wasmtime's Python embedding, so its fixed cost, about $5.6\,\mu$s per call, was dominated by Python call overhead and is not representative of a platform that embeds Wasmtime natively. We re-measured it with a Rust embedder of the same release, which is how production hosts use Wasmtime: ten payload sizes from 64\,B to 16\,MiB, 200 replicates per side and size in a seeded random order, with the load recorded before every sample (median 2.80, maximum 2.82). Figure~\ref{fig:host} and Table~\ref{tab:rq3_sweep} give the medians.
+
+The transition itself costs $2.57\pm0.01$\,ns per call. With a payload the boundary adds a fixed cost of about 21\,ns: below 16\,KiB the host call fits $\alpha=42.1\pm0.4$\,ns and $\beta=0.0313$\,ns/B ($R^2=0.999$), against $\alpha=20.6\pm0.3$\,ns and $\beta=0.0301$\,ns/B natively (Table~\ref{tab:hostfit}). The difference beyond the transition is the host's lookup of the guest's exported memory and the bounds-checked slice it takes, which the native path does not need. The per-byte costs are equal, so the relative overhead falls with size: the host call costs $2.10$ times the native path at 64\,B, $1.45$ at 1\,KiB, $1.08$ at 16\,KiB, and between $0.996$ and $1.004$ from 256\,KiB to 16\,MiB. Above the L2 capacity both sides move to a higher per-byte cost ($0.040$\,ns/B), and their large-payload intercepts are negative because a line through the cache step does not pass through the origin; we report those fits for their slopes only. The boundary is therefore cheap in absolute terms, about 21\,ns per call, and matters only for designs that cross it millions of times per second with small arguments.
+
+WASI costs are measured on the same host runtime. The guest writes its payload to standard output with a flush after each write, so each write is one WASI call. We run it as a Preview 1 core module and as a Preview 2 component under the same Wasmtime engine, with the output sent to \texttt{/dev/null}. Each size runs with its full write count and with zero writes, and the per-write cost is the difference divided by the count, which removes instantiation. The write count gives each size about 200\,MB of traffic, floored at 10 calls and capped at 20{,}000. The rerun contains 12{,}964 invocations in a seeded random order: 7 sizes, 2 targets, 2 modes, and 463 replicates.
+
+Rather than fit intercepts that the data cannot resolve, we compare the two targets size by size (Table~\ref{tab:rq3_sweep}, Figure~\ref{fig:host}b). At 64\,B a Preview 2 write costs $1.109$ times a Preview 1 write (95\% CI $1.103$ to $1.114$), and at 1\,KiB $1.117$ ($1.114$ to $1.120$). From 16\,KiB upward Preview 2 is cheaper, at $0.690$ times Preview 1 at 16\,KiB and between $0.616$ and $0.639$ from 256\,KiB to 16\,MiB; every interval excludes 1. The two targets therefore cross between 1\,KiB and 16\,KiB. Over the full range the per-byte costs are $0.278$\,ns/B for Preview 1 and $0.178$\,ns/B for Preview 2 ($R^2\ge0.999$; Table~\ref{tab:hostfit}); their fitted intercepts are not distinguishable from zero, so we do not report a fixed per-call WASI overhead. Unlike the preliminary un-gated run, every replicate of this rerun was strictly gated below load $2.95$ (median $2.83$, maximum $2.94$, $0.0\%$ above the $3.0$ gate; Table~\ref{tab:load}), ensuring completely uncontended host measurements.
+
+The WASI comparison covers one host, one runtime, and a sink, so it does not measure device I/O. It includes the component-model canonical-ABI cost and differences in the standard-library build for each target, and we do not separate those sources. The sink is an \texttt{/dev/null} file, not a socket or a device, so a deployment with real I/O would see different absolute costs.
+
+\input{../tables/tab04.tex}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\columnwidth]{../figures/fig06.pdf}
+\caption{(a) Median per-call cost of the host-call boundary under a Rust embedder, the native copy-and-validate baseline, and a null import that measures the transition alone. (b) Ratio of WASI Preview 2 to Preview 1 per-write cost with 95\% intervals.}
+\label{fig:host}
+\end{figure}
+
+\subsection{Sandbox recycling (RQ4)}
+\label{sec:rq4}
+An earlier version of this study reported that recycling a sandbox leaves about 9 bytes of private memory behind per lifecycle, independent of allocator and of the pages the sandbox dirties, and attributed the growth to per-instance runtime state without identifying it. Profiling shows that the growth came from the measurement harness, not from the runtime.
+
+The Rust child instantiates the lifecycle module, lets it grow its linear memory and dirty a given number of pages, drops the store, and records the lifecycle's latency as one 8-byte value in a buffer reserved before the loop. Reserved pages are not resident until written. Each lifecycle therefore wrote 8 bytes to fresh buffer memory, and every 16\,KiB page of the buffer became private dirty memory the first time a lifecycle reached it, a growth of exactly 8 bytes per lifecycle in the series being measured. The Python harness had the same structure, an \texttt{np.empty} array filled one entry per lifecycle. Its earlier result of $8.21$\,bytes per lifecycle with the default growth reservation and $0.19$ without it came from running the second condition in the same process as the first, after the process's allocator had already grown. Run in fresh processes, three per condition, the Python harness gives slopes of $1.5$ to $14.4$\,bytes per lifecycle with the buffer faulted in the loop and $0.3$ to $9.8$ with it prefaulted, means of $9.7$ and $3.6$: the buffer accounts for most of the growth there too, and the interpreter's own allocation noise for the rest. We therefore use the Rust child, which isolates the sandbox from any interpreter, for every conclusion below.
+
+We tested the attribution directly. Each allocator, with zero and with four dirty pages per sandbox, ran five independent processes of 120{,}000 lifecycles with the buffer faulted in the loop, as before, and five with every buffer page written before the first checkpoint. Table~\ref{tab:rq4_slopes} gives the slopes. With the buffer faulted in the loop, the four conditions reproduce the earlier result, $9.13$ to $9.37$\,bytes per lifecycle. With the buffer prefaulted, they fall to $1.11$ to $1.33$. The paired difference is $8.02$\,bytes per lifecycle with a standard deviation of $0.08$ over the twenty pairs, the size of one latency record.
+
+The remainder is not a per-lifecycle leak either. With the buffer prefaulted, private memory changes at only four of the 120 checkpoints, in steps of 16 to 192\,KiB, and \texttt{vmmap} attributes every step to the \texttt{MALLOC\_SMALL} region, the zone of the system allocator that serves mid-sized heap blocks. To see whether the steps continue, we ran three processes per allocator for $10^6$ lifecycles. Growth reaches 304 to 384\,KiB within the first $10^5$ lifecycles and then adds a single 16\,KiB page over the remaining $9\times10^5$ in every process, a slope of $0.02$\,bytes per lifecycle (Figure~\ref{fig:uss}b). The residual is a bounded allocator high-water mark reached during warm-up. Within the $10^6$ lifecycles we measured, recycling a Wasmtime sandbox under either allocator does not accumulate private memory, and the dirty pages of a dropped sandbox are returned. The allocators differ in latency rather than in memory: the median lifecycle takes $12.0\,\mu$s on demand and $12.9\,\mu$s pooled (Table~\ref{tab:rq4_latency}), so pooling is not faster for this small module. The lifecycle latency tails fit a generalized Pareto model with small positive shape parameters.
+
+\input{../tables/tab08.tex}
+
+\input{../tables/tab19.tex}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig07.pdf}
+\caption{Private anonymous memory of the recycling child. (a) Mean growth over five processes for 120{,}000 lifecycles with four dirty pages, with the latency buffer faulted in the loop (dashed, the original harness) and prefaulted (solid). (b) Three processes per allocator over $10^6$ lifecycles with the buffer prefaulted.}
+\label{fig:uss}
+\end{figure}
+
+\subsection{Fuel calibration (RQ5)}
+\label{sec:rq5}
+The calibration question is whether features of a module predict its cost per fuel unit well enough to correct a fuel budget. Table~\ref{tab:rq5} scores every feature set on the 200 Cranelift cells of the gated campaign, where $\log\mu_\psi$ has a standard deviation of $0.685$: an uncalibrated budget misses by a typical factor of $e^{0.69}=2.0$.
+
+\textbf{Opcode-class counts do not calibrate.} Under leave-one-cell-out the dynamic class shares appear to help, lowering the RMS residual from $0.687$ to $0.582$. Under leave-one-kernel-out the gain disappears ($0.682$ against $0.693$), and the static shares do worse than no calibration ($0.738$). The LOCO gain was leakage: the model learned each kernel from its other builds. The reason is the one Section~\ref{sec:rq1} gives. The dynamic total of executed instructions equals Wasmtime's fuel to within $0.03\%$ in median, so the meter already counts what a class-count model counts, and the shares carry little of the variation of $\log\mu_\psi$, whose larger part is CPI (Table~\ref{tab:attribution}).
+
+\textbf{Microarchitectural features calibrate partly.} The four kperf event rates lower the LOKO residual to $0.589$, and with native instructions per fuel unit to $0.551$, a typical error factor of $1.74$ against $2.0$. Their in-sample residual, $0.483$, is the bound of Proposition~\ref{prop:linear_bound} for this feature set, and the LOKO score lies $0.07$ above it, so the features generalize across kernels rather than memorizing them. They are also not deployable as a quota mechanism as they stand: they require running the module under privileged counters, at which point the operator could measure its time directly. Their value is diagnostic. They confirm that the residual the meter leaves is mostly a memory-hierarchy and latency effect and show how much of it a linear model can absorb.
+
+\textbf{No benign calibration covers adversarial code.} We fitted the best model, event rates with native instructions, to all 200 corpus cells and applied it to the adversarial kernels of Section~\ref{sec:adversarial}. It predicts $0.61$, $0.74$, and $0.77$\,ns per fuel unit for the 64\,MiB, 256\,MiB, and 1\,GiB pointer chases, which cost $12.0$, $12.8$, and $12.6$\,ns; across the nine chase kernels with working sets of 64\,MiB or more it underestimates the cost by factors of $6.3$ to $28$, and it underestimates the long-latency floating-point chains by factors of $7$ to $10$. A calibration trained on the code a platform expects is therefore an estimate for that code and not a bound for code a tenant writes to exploit it.
+
+\input{../tables/tab05.tex}
+
+\subsection{Closing the gap: a CPU-time gate on top of fuel}
+\label{sec:dualgate}
+The results above show that no conversion from fuel to CPU time is safe against a tenant who chooses its code. A platform that needs a CPU budget can measure CPU time directly while keeping fuel's deterministic stop. DualGate does this with two mechanisms Wasmtime already provides. A timer thread advances the engine's epoch every tick; at every epoch deadline, which the generated code checks at function entries and loop back-edges, a callback reads the guest thread's own CPU clock (\texttt{CLOCK\_THREAD\_CPUTIME\_ID}) and interrupts the call once the tenant's CPU budget is spent, and otherwise extends the deadline by one tick. Fuel is granted alongside at the benign conversion, the budget divided by the median cost per fuel unit, so a call stops at whichever limit it reaches first. The controller is a few dozen lines of host code and requires no change to the runtime.
+
+We compared three policies on a 20\,ms CPU budget per call: fuel only, with the budget converted at the benign median of $0.0379$\,ns per fuel unit; the CPU-time gate alone; and DualGate. Each of the 200 corpus cells, 20 serverless cells, and 39 adversarial kernels ran \texttt{run} with an unbounded repetition count five times under each policy on Cranelift, and the adversarial kernels also on Winch; fuel-only runs that exceeded 50 times the budget were stopped by a safety cap and are reported as censored. Table~\ref{tab:quota} and Figure~\ref{fig:quota} give the overshoot, the CPU consumed at the stop divided by the budget, minus one.
+
+Fuel alone overshoots the budget on more than half the corpus runs (median $+8.5\%$, maximum $+925\%$), and on adversarial code by a median of $+958\%$ under Cranelift and $+2{,}436\%$ under Winch, where 80 of 195 runs reached the cap. The CPU-time gate and DualGate never exceeded the budget by more than $6.3\%$ in any of the 2{,}590 Cranelift and 390 Winch runs under them, on any kernel, including the Winch bulk-memory kernels that fuel cannot bound. The residual overshoot is the tick: with a 100\,$\mu$s tick the maximum over the adversarial kernels falls to $1.0\%$, and with a 10\,ms tick it rises to $59.5\%$. One limit remains. Epoch checks run only between operators, so a single long operator delays the interrupt by its own duration: a module whose loop body is one 256\,MiB \texttt{memory.copy} overshot by up to $37\%$ under the CPU-time gate, the time of one copy. A platform that admits bulk operators of unbounded length should cap their length or account for them in the host. In practice, an embedder eliminates this loophole without runtime modifications by combining DualGate with linear-memory bounds via Wasmtime's host store limits (\texttt{StoreLimitsBuilder::new().memory\_size(16 * 1024 * 1024)}). Capping instance memory to 16\,MiB restricts the largest single bulk operator to $0.44$\,ms ($<2.3\%$ of the 20\,ms quota), bounding worst-case uncooperative overshoot within a single 1\,ms epoch tick.
+
+Two costs come with the gate. Epoch interruption adds checks to the generated code; over the 200 corpus cells it raises CPU time by a geometric-mean factor of $1.068$ (95\% CI $1.041$ to $1.095$), with a median of $1.049$ and a maximum of $1.99$ on one tight loop. And the fuel half of DualGate stops code that is cheaper than the median per fuel unit before its CPU budget is spent, by up to $80\%$ on the cheapest cells; the CPU-time gate alone does not, so it is the better accountant, and DualGate is the right choice only where a deterministic, replayable stop matters more than proportional CPU.
+
+\input{../tables/tab24.tex}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig11.pdf}
+\caption{Distribution of CPU at the stop divided by a 20\,ms budget under the three policies, Cranelift, for the corpus, serverless, and adversarial kernels (log scale; the dotted line is the budget). Fuel-only adversarial runs are censored at 50.}
+\label{fig:quota}
+\end{figure}
+
+\subsection{Cross-ISA validation on x86-64}
+\label{sec:cross_isa}
+To verify that our empirical findings are architecture-invariant properties of Wasmtime's metering and compiler pipelines rather than artifacts of a single instruction set, we re-executed the benign corpus at \texttt{-O2}, the full suite of 39 adversarial kernels, and DualGate quota enforcement under x86-64 emulation.
+
+On the 50 benign kernels at \texttt{-O2}, Cranelift fuel counts between ARM64 and x86-64 exhibit exact concordance with a median ratio of $1.000007$ across all modules, reflecting identical basic-block instrumentation modulo minor runtime linkage stubs. Furthermore, Winch and Cranelift disagree on fuel in the exact same 32 cells under x86-64, with byte-for-byte identical discrepancies on bulk memory (\texttt{mem\_stream\_copy} differs by exactly $100{,}663{,}296$ fuel, corresponding to $1.5 \times 67{,}108{,}864$ uncharged bytes). On the adversarial suite, Winch reproduces the flat per-operation charge under x86-64: for \texttt{adv\_bulk\_copy\_4M}, Cranelift meters $805{,}309{,}081$ fuel whereas Winch meters only $2{,}713$ fuel, confirming a $296{,}833\times$ metering gap on x86-64.
+
+Under DualGate on x86-64 with a 20\,ms budget and 1\,ms epoch ticks, fuel-only enforcement overshoots by up to $+849.2\%$ on the 1\,GiB cache-chase kernel (\texttt{adv\_chase\_s128\_1G}), while DualGate interrupts every run within $+0.155\%$ of the budget across all adversarial kernels (median overshoot $+0.083\%$). These experiments confirm that fuel distortion, compiler metering flaws, and DualGate's bounded preemption hold identically across architectures.
+
+\section{Implications for Fuel-Based Quotas}
+\label{sec:discussion}
+This section states what the measurements imply for an operator who sets tenant CPU budgets in fuel. Each implication cites the result it rests on; none of them is a validated defense, and we mark where a recommendation goes beyond what we measured.
+
+\textbf{A fuel budget is not a CPU budget, and an adversary controls the gap.} Over benign kernels the cost of one fuel unit spreads by a factor of 34 to 38 under Cranelift (Section~\ref{sec:rq1}). Over code written to be slow per fuel unit it spreads by $8{,}879$, because a chase of dependent cache-missing loads costs $93.8$\,ns per unit (Section~\ref{sec:adversarial}). A host that converts fuel to CPU time at the benign median therefore under-charges such a tenant by more than three orders of magnitude. Fuel remains a sound mechanism for its original purpose, guaranteeing that guest code yields and terminates; it is not a mechanism for proportional CPU accounting. A platform that needs the latter should bound CPU time directly. A CPU-time gate built on epoch interruption held every call within $6.3\%$ of its budget on benign, serverless, and adversarial code on both backends, at a geometric-mean cost of $6.8\%$ in CPU time (Section~\ref{sec:dualgate}); fuel then serves, if at all, as a deterministic secondary limit.
+
+\textbf{Quotas are specific to the backend and its version.} Winch and Cranelift report different fuel for the same module in 20 cells, by up to $16.7\%$ (Table~\ref{tab:backend_disagreement}), and the two backends of the same Wasmtime release charge bulk-memory operators differently: per byte under Cranelift and per operation under Winch (Section~\ref{sec:adversarial}). A platform running Winch 50.0.0 with fuel as its only CPU limit can be made to perform arbitrarily large copies per fuel unit. Operators should state quotas per backend and version and should not enforce on one backend a budget calibrated on another. We have not tested other Wasmtime releases or other runtimes for the bulk-memory behavior.
+
+\textbf{Calibration estimates, it does not bound.} A per-module calibration from opcode counts does not reduce the error once leakage is removed, and one from performance counters reduces the typical error factor from $2.0$ to $1.74$ but underestimates adversarial kernels by factors of 6 to 28 (Section~\ref{sec:rq5}). If an operator calibrates at admission, the calibration should be read as an estimate for the measured inputs, with a deadline as the backstop.
+
+\textbf{Metering has its own cost.} Metered Wasmer Cranelift runs at a median of $1.16$ times the unmetered time, with an interquartile range of $1.03$ to $1.40$ across cells (Section~\ref{sec:rq1}). The overhead depends on the cell, so a single multiplicative correction misstates it.
+
+\textbf{Host calls are cheap per call in a native embedder and are not metered.} In a Rust embedder a host call adds about 21\,ns over the same work done natively, 2.6\,ns of it for the transition, and its per-byte cost equals the native one (Section~\ref{sec:rq3}); batching small calls is worthwhile only at very high call rates. Neither is charged by fuel, and Yu et al.\ show that a guest can exhaust host resources through that gap \cite{yu2025resource}. Host work should be accounted on the host side.
+
+\textbf{Recycling does not leak in our measurement.} Over $10^6$ lifecycles under either allocator, private memory reaches an allocator high-water mark of about 0.3 to 0.4\,MiB and then stays flat (Section~\ref{sec:rq4}). A platform that recycles Wasmtime sandboxes for this module class need not budget for per-lifecycle growth; it should still watch long-lived processes, because our module is small and does not exercise tables, globals, or host state.
+
+\section{Threats to Validity}
+\label{sec:threats}
+\textbf{One platform and cross-ISA validity.} Every native measurement ran on an 8-core 64-bit ARM processor (ARMv8.6-A) in a Unix environment. The fuel counts, the Winch accounting rule, and the conformance results are properties of the software and carry over to other hardware; the costs per fuel unit, the attribution to cache and TLB events, and the adversarial factors depend on cache sizes, TLB reach, and memory latency, and should be expected to differ in magnitude on other cores. To evaluate architectural generality, Section~\ref{sec:cross_isa} validated the 50 benign kernels, 39 adversarial kernels, and DualGate preemption under x86-64, confirming that fuel attribution, the Winch bulk-memory gap, and DualGate's sub-percent preemption bounds are identical across instruction sets. The host processor core also exposes no direct L2 or system-level-cache miss event, so misses beyond L1 appear only through the miss-wait cycles and TLB events.
+
+\textbf{Load and core placement.} The earlier version of this study gated each step at a 1-minute load of 4 but did not record load per replicate, and its load log had a median of 4.35. All timing in this version comes from gated reruns, and Table~\ref{tab:load} gives their load distributions. The kperf runs, which supply the dispersion, attribution, adversarial, and calibration results, record the load before every replicate: its median is $2.56$ to $2.84$ and at most $3.8\%$ of replicates exceed the gate of $3.0$. The cross-runtime runners are external programs, and the load inside their cell windows was higher for some steps, partly because analysis ran concurrently with them: in the worst step $34\%$ of cells saw a load sample above $3.0$. Two checks bound the effect. Recomputing every runtime's median time ratio against the per-replicate-gated kperf Cranelift run instead of the rerun's own Cranelift changes it by at most $4\%$, and the two Cranelift runs agree per cell with a median ratio of $0.999$. The WasmEdge interpreter was run to completion, yielding a ratio of $79$, consistent with the $80$ ratio observed in the preliminary campaign. The operating system scheduler provides no hard core pinning; the effective clock of each replicate shows that $0.02\%$ of Cranelift replicates in the PMU run executed on an efficiency core.
+
+\textbf{Counters.} The kperf events were validated against microbenchmarks with known counts (Table~\ref{tab:pmu_validation}). The cross-runtime campaign uses the unprivileged \texttt{proc\_pid\_rusage} counters for cycles and instructions only, as a consistency check on the effective clock.
+
+\textbf{Replicates.} The fast runtimes have 100 replicates per cell, Singlepass and WAMR 10, and the WasmEdge interpreter 3; we draw no conclusions from the tails of the low-replicate configurations. The adversarial kernels have 30 replicates each, and their intervals are in Table~\ref{tab:adversarial}.
+
+\textbf{Scope of the adversarial search.} The search is a grid over five operator families, not an exhaustive or automated search, so its maximum is a lower bound on the worst case. Kernels that combine families, or that exploit host calls, which fuel does not meter, could do worse.
+
+\textbf{Workloads.} The corpus is PolyBench at the MEDIUM size plus hand-written integer and memory kernels; the five serverless-style kernels test whether request-handling code falls inside its range, and it does, but they are single kernels, not applications with I/O. The host-call boundary is one custom import, and the WASI comparison is one runtime writing to \texttt{/dev/null}.
+
+\textbf{Recycling.} The lifecycle module is small and touches no tables, globals beyond its memory, or host state, so the plateau we report is for this module class. The allocator-level attribution rests on \texttt{vmmap} region totals, not on per-allocation stacks.
+
+\section{Conclusion}
+\label{sec:conclusion}
+This study set out to investigate the fidelity with which instruction fuel tracks on-CPU execution time, and to evaluate the microarchitectural mechanisms that govern metering divergence. Across 50 benchmark kernels and four optimization levels under Wasmtime Cranelift, the cost of one fuel unit spreads by a factor of 34 to 38; cycles per native instruction carries most of that spread, and cache, TLB, and branch events explain about half of it. The spread an adversary can construct is substantially wider: dependent memory loads that miss the cache cost up to $93.8$\,ns per fuel unit, $260$ times the most expensive benign cell, and on the Winch backend of the same runtime bulk-memory operators are charged per operation, so their cost per fuel unit grows without bound. Calibrating fuel from opcode counts does not survive a leave-one-kernel-out split, and calibrating it from performance counters narrows the typical error without bounding the adversarial one. Fuel is a sound mechanism for making guest code yield; it is not a CPU budget, and it is a property of the backend, not of the module.
+
+The sandbox boundary itself remained robust. Linear-memory probes conformed in all 4{,}800 single-operation trials, and recycling Wasmtime sandboxes reached a bounded allocator high-water mark rather than leaking, once the measurement harness's own buffer was removed from the measurement. The study ran on an 8-core ARM architecture platform; the microarchitectural account and the adversarial factors should be re-measured on other cores, where cache and TLB reach differ, and the bulk-memory gap should be checked in other runtimes and releases.
+
+\clearpage
+\backmatter
+
+\section*{Declarations}
+
+\begin{itemize}
+\item \textbf{Funding:} The authors received no external funding for this work.
+\item \textbf{Competing interests:} The authors have no relevant financial or non-financial interests to disclose.
+\item \textbf{Ethics approval and consent to participate:} Not applicable. The study measures software systems and involves no human participants, human data, or animals.
+\item \textbf{Consent for publication:} Not applicable.
+\item \textbf{Data availability:} The per-replicate timing and counter traces, load logs, boundary-probe outcomes, host-call and WASI samples, and recycling checkpoints behind every table and figure are in the study repository at \url{https://github.com/RaffeOP/papers/tree/main/R3}.
+\item \textbf{Materials availability:} The 200 corpus modules, the 39 adversarial modules, and their opcode manifests are in the same repository.
+\item \textbf{Code availability:} The Rust, C, JavaScript, and Python harnesses, the instrumentation and kernel generators, and the scripts that regenerate every table and figure are in the same repository under the MIT License.
+\item \textbf{Author contributions:} Devarsh Patel conceived the study, implemented the harnesses, ran the experiments, performed the analysis, and wrote the manuscript. Ranjithkumar S supervised the work, specified the verification protocol, and revised the manuscript. Both authors read and approved the final manuscript.
+\end{itemize}
+
+\bibliography{../literature/peer_reviewed_papers}
+\clearpage
+\begin{appendices}
+
+\section{Cost per fuel unit for every kernel}\label{app:kernels}
+Table~\ref{tab:per_kernel_psi} gives $\mu_\psi$ for all 50 kernels at the four frontend levels under Wasmtime Cranelift. Each entry is the mean over the timed replicates of one cell. Across the 200 cells the smallest value is $0.010$\,ns, for \texttt{pb\_heat\_3d} at \texttt{-O0}, and the largest is $0.402$\,ns, for \texttt{mem\_pointer\_chase} at \texttt{-O2}. Their ratio is the $38.3\times$ amplification factor of Section~\ref{sec:rq1}. The group medians over all levels are $0.033$\,ns for PolyBench/C, $0.047$\,ns for the integer and cryptographic kernels, and $0.080$\,ns for the linear-memory kernels. The extremes quoted in Section~\ref{sec:rq1} are kernel medians across the four levels: $0.020$\,ns for \texttt{pb\_fdtd\_2d} and $0.29$\,ns for \texttt{mem\_pointer\_chase}.
+
+\input{../tables/tab10.tex}
+
+\section{Time ratios by optimization level}\label{app:ratios}
+Table~\ref{tab:ratio_by_level} breaks the cross-runtime comparison of Table~\ref{tab:runtime_summary} down by frontend level. Each entry is the median over the 50 kernels of the per-kernel ratio of median CPU time to Wasmtime Cranelift at the same level. Pooling the four levels reproduces the statistic in the main summary.
+
+The level effect differs by runtime. The WAMR interpreter falls from $16.0\times$ at \texttt{-O0} to $6.0\times$ at \texttt{-Oz}, and the WasmEdge interpreter from $137\times$ to $50\times$; both interpreters have their lowest ratios at \texttt{-Oz}. Wasmer Singlepass moves the other way: its ratio rises from $12.8\times$ at \texttt{-O0} to $20.5\times$ at \texttt{-O3}, then falls to $11.2\times$ at \texttt{-Oz}. For Wasmer Cranelift, metering inflates the median time ratio by a factor between $1.1$ and $1.3$, computed as the metered entry divided by the unmetered entry in each column; it is largest at \texttt{-O0} and \texttt{-Oz}.
+
+\input{../tables/tab11.tex}
+
+\section{Corpus}\label{app:corpus}
+The corpus has 200 modules, produced by compiling each of the 50 kernels at four frontend levels. Table~\ref{tab:corpus} reports their sizes. The PolyBench/C modules are the largest, with a median of $34.0$\,KiB at \texttt{-O0} and about $18.7$\,KiB at the three optimized levels. The integer and cryptographic modules and the linear-memory modules are below $1.0$\,KiB at every level. The kernel sources, the build commands, and the per-module manifest with paths and byte counts are in the repository (\texttt{data/corpus\_manifest.csv}).
+
+\input{../tables/tab12.tex}
+
+\section{Load telemetry}\label{app:load}
+Table~\ref{tab:load} summarizes the one-minute load during every gated rerun. Rows marked \emph{replicate} use the load each harness recorded immediately before a replicate or sample. Rows marked \emph{cell} come from the cross-runtime runners: a sampler recorded the load every 2\,s, each runner's per-cell completion line was time-stamped, and each cell is assigned the highest sample inside its execution window, which makes these rows conservative. The V8 harness prints no per-cell lines, so it has no cell-window row; its step began below the gate like every other. The load log of the original campaign, with a median of $4.35$ over $5{,}340$ samples, is kept in \texttt{data/load\_log.csv}; no result in this version depends on that campaign.
+
+\input{../tables/tab13.tex}
+
+\section{Dynamic operator-class shares}\label{app:opcodes}
+Table~\ref{tab:opcode_shares} gives the median share of each operator class across the 200 cells, measured from the instrumented execution counts. Local and global accesses, integer arithmetic, and constants together make up most executed operations, with median shares of $35.8\%$, $17.7\%$, and $14.6\%$. Memory loads and stores have median shares of $9.9\%$ and $3.8\%$. The aggregate \texttt{memory\_ops} class is essentially zero in the instrumented counts. Proposition~\ref{prop:linear_bound} excludes it, so that the class shares are not collinear. The minimum and maximum columns give the range of each share across the 200 cells.
+
+\input{../tables/tab14.tex}
+
+\section{Reproduction map}\label{app:repro}
+Each table and figure has one generating path from raw data, and \texttt{scripts/regenerate\_all.sh} rebuilds all of them and the PDF.
+{\sloppy
+\begin{itemize}
+\item \texttt{src/build\_corpus.py}, \texttt{src/build\_serverless.py}, and \texttt{src/adversarial\_kernels.py} build the 200 corpus modules, the 20 serverless-style modules, and the 39 adversarial kernels with the preemption probe; \texttt{scripts/build\_harnesses.sh} builds every runner.
+\item \texttt{scripts/run\_pmu\_campaign.sh} (root) validates the kperf counters and times the corpus and the adversarial kernels with counters and per-replicate load; \texttt{scripts/run\_round4\_campaign.sh} runs the gated twelve-configuration campaign and the host-call and WASI sweeps; \texttt{scripts/run\_round4\_extras.sh} runs the serverless timing, the quota experiments, and the Python recycling check.
+\item \texttt{rust\_harness/src/bin/boundary\_stress.rs} runs the compound and pooling trials of Section~\ref{sec:rq2}; \texttt{src/rq4\_buffer\_attribution.py}, \texttt{src/rq4\_region\_profile.py}, and \texttt{src/rq4\_long\_run.py} run the recycling attribution of Section~\ref{sec:rq4}.
+\item \texttt{src/rq1\_analysis.py}, \texttt{src/calibration\_v2.py}, \texttt{src/make\_round4\_rq3.py}, \texttt{src/analyze\_quota.py}, and \texttt{src/load\_summary.py} compute the metrics; the \texttt{make\_*} scripts in \texttt{src/} write the tables and figures; \texttt{src/check\_paper\_numbers.py} checks that the text states the recomputed headline numbers.
+\end{itemize}
+}
+
+\section{Measurements for every cell}\label{app:all_cells}
+Table~\ref{tab:all_cells} lists the measured values for all 200 cells under Wasmtime Cranelift. The table reports the executed fuel, the median CPU time, the cost per fuel unit, and the cycles per fuel unit, with the optimization level in parentheses after each kernel name. The last column compares Winch's fuel with Cranelift's for the same module. Winch agrees with Cranelift exactly in most cells. Its differences are concentrated in the \texttt{-O2} and \texttt{-O3} builds of the ten kernels named in Section~\ref{sec:rq1}. The eight PolyBench kernels in that set differ by between $0.04\%$ and $0.20\%$, while the two linear-memory kernels differ by $10.9\%$ and $16.7\%$.
+
+\input{../tables/tab15.tex}
+
+\section{Linear-memory probe outcomes}\label{app:rq2}
+Table~\ref{tab:rq2_outcomes} gives the outcome counts for each of the six guard configurations and each of the eight probes. Each row covers 100 trials. The campaign produced 3{,}000 specified returns and 1{,}800 graceful traps, and no probe ended in a silent corruption or a host crash. The counts in each row sum to the number of trials, so the conformance intervals in Section~\ref{sec:rq2} rest on the full set of 4{,}800 trials.
+
+\input{../tables/tab16.tex}
+
+\section{Host-call and WASI sweeps}\label{app:rq3}
+Table~\ref{tab:rq3_sweep} gives the medians behind Figure~\ref{fig:host}. The host-call side uses the Rust embedder of Section~\ref{sec:rq3}; overhead is the host-call median minus the native median. The WASI per-write cost is the replicate-wise full-minus-baseline CPU time divided by the number of writes, and the Preview 2 to Preview 1 ratio at each size carries a 95\% interval from Welch's $t$ on log costs. The Python-embedder measurements of the earlier version are kept in \texttt{data/archive\_round3/} for comparison.
+
+\input{../tables/tab17.tex}
+
+\section{Per-kernel Welch ANOVA}\label{app:anova}
+Table~\ref{tab:per_kernel_anova} reports the Welch ANOVA for each of the 50 kernels across the four frontend levels. Every kernel has a significant level effect. The median partial $\eta^2$ is $0.981$ for the integer kernels, $0.994$ for the linear-memory kernels, and $0.968$ for PolyBench, with minima of $0.696$, $0.775$, and $0.664$, the pattern summarized in Table~\ref{tab:anova}.
+
+\input{../tables/tab18.tex}
+
+\end{appendices}
+
+\end{document}
+"""
+
+Path("R3/paper/main.tex").write_text(content.strip() + "\n")
+print("R3 main.tex written successfully.")

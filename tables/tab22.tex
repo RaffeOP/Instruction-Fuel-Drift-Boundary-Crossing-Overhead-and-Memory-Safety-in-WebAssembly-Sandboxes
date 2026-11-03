@@ -1,0 +1,52 @@
+\begin{table}[t]
+\caption{Adversarial worst-case search under Wasmtime (Cranelift, 30 replicates per kernel, gated). Fuel is per repetition of the kernel body; $\mu_\psi$ is in ns per fuel unit with a 95\% $t$ interval. The ratio column divides by the largest corpus cell, $0.360$\,ns (the smallest is $0.0106$\,ns). The miss column is retired L1D load misses per fuel unit; the wait column is the share of cycles spent waiting on an L1D miss. The last column is $\mu_\psi$ under Winch. Chase kernels are named by stride, working set, and, for \texttt{\_uN}, the number of loads nested in one expression.}\label{tab:adversarial}
+\footnotesize
+\setlength{\tabcolsep}{4pt}%
+\begin{adjustbox}{max width=\textwidth}%
+\begin{tabular}{lrrrrrr}
+\toprule
+Kernel & Fuel/rep & $\mu_\psi$ (ns) & $\div$ corpus max & L1D miss/fuel & Wait share & Winch $\mu_\psi$ \\
+\midrule
+\texttt{chase\_s128\_16K} & 524,295 & $0.145 \pm 0.004$ & 0.40 & 0.000 & 0.00 & 0.238 \\
+\texttt{chase\_s128\_64K} & 524,295 & $0.135 \pm 0.000$ & 0.38 & 0.000 & 0.00 & 0.245 \\
+\texttt{chase\_s128\_256K} & 524,295 & $0.550 \pm 0.019$ & 1.53 & 0.082 & 0.42 & 0.822 \\
+\texttt{chase\_s128\_1M} & 524,295 & $0.669 \pm 0.019$ & 1.86 & 0.115 & 0.46 & 0.860 \\
+\texttt{chase\_s128\_4M} & 524,295 & $0.815 \pm 0.028$ & 2.26 & 0.122 & 0.43 & 0.903 \\
+\texttt{chase\_s128\_16M} & 524,296 & $2.904 \pm 0.258$ & 8.06 & 0.125 & 0.80 & 1.495 \\
+\texttt{chase\_s128\_64M} & 524,299 & $11.998 \pm 0.061$ & 33.30 & 0.125 & 0.93 & 12.090 \\
+\texttt{chase\_s128\_256M} & 524,299 & $12.774 \pm 0.096$ & 35.46 & 0.125 & 0.90 & 13.341 \\
+\texttt{chase\_s128\_1G} & 524,299 & $12.597 \pm 0.048$ & 34.97 & 0.125 & 0.91 & 13.021 \\
+\texttt{chase\_s16384\_256K} & 524,295 & $0.423 \pm 0.005$ & 1.18 & 0.092 & 0.36 & 0.591 \\
+\texttt{chase\_s16384\_1M} & 524,295 & $0.714 \pm 0.025$ & 1.98 & 0.116 & 0.50 & 0.700 \\
+\texttt{chase\_s16384\_4M} & 524,295 & $0.871 \pm 0.054$ & 2.42 & 0.123 & 0.36 & 1.066 \\
+\texttt{chase\_s16384\_16M} & 524,295 & $1.023 \pm 0.015$ & 2.84 & 0.125 & 0.46 & 1.495 \\
+\texttt{chase\_s16384\_64M} & 524,296 & $4.828 \pm 0.049$ & 13.40 & 0.125 & 0.72 & 4.933 \\
+\texttt{chase\_s16384\_256M} & 524,297 & $5.440 \pm 0.264$ & 15.10 & 0.125 & 0.78 & 5.572 \\
+\texttt{chase\_s16384\_1G} & 524,299 & $13.520 \pm 0.062$ & 37.53 & 0.125 & 0.89 & 13.717 \\
+\texttt{chase\_s128\_16K\_u4} & 180,231 & $0.369 \pm 0.006$ & 1.02 & 0.000 & 0.00 & 0.516 \\
+\texttt{chase\_s128\_1G\_u4} & 180,235 & $39.198 \pm 0.920$ & 108.80 & 0.364 & 0.87 & 38.198 \\
+\texttt{chase\_s128\_16K\_u16} & 94,215 & $0.722 \pm 0.013$ & 2.00 & 0.000 & 0.00 & 0.958 \\
+\texttt{chase\_s128\_1G\_u16} & 94,219 & $71.464 \pm 0.204$ & 198.36 & 0.696 & 0.90 & 73.241 \\
+\texttt{chase\_s128\_16K\_u64} & 72,711 & $0.900 \pm 0.002$ & 2.50 & 0.000 & 0.00 & 1.256 \\
+\texttt{chase\_s128\_1G\_u64} & 72,715 & $93.825 \pm 1.441$ & 260.43 & 0.901 & 0.89 & 94.587 \\
+\texttt{alu\_i64\_add} & 589,831 & $0.056 \pm 0.000$ & 0.15 & 0.000 & 0.00 & 0.194 \\
+\texttt{alu\_i64\_mul} & 589,831 & $0.083 \pm 0.000$ & 0.23 & 0.000 & 0.00 & 0.217 \\
+\texttt{alu\_i64\_div} & 720,903 & $0.186 \pm 0.003$ & 0.52 & 0.000 & 0.00 & 0.242 \\
+\texttt{alu\_i64\_rem} & 720,903 & $0.248 \pm 0.000$ & 0.69 & 0.000 & 0.00 & 0.313 \\
+\texttt{alu\_f64\_div} & 589,831 & $0.384 \pm 0.006$ & 1.06 & 0.000 & 0.00 & 0.295 \\
+\texttt{alu\_f64\_sqrt} & 655,367 & $0.526 \pm 0.001$ & 1.46 & 0.000 & 0.00 & 0.410 \\
+\texttt{branch\_random} & 2,162,695 & $0.168 \pm 0.002$ & 0.47 & 0.000 & 0.00 & 0.321 \\
+\texttt{indirect\_2} & 2,293,767 & $0.230 \pm 0.001$ & 0.64 & 0.000 & 0.00 & 0.449 \\
+\texttt{indirect\_64} & 2,293,767 & $0.362 \pm 0.001$ & 1.00 & 0.000 & 0.00 & 0.711 \\
+\texttt{bulk\_copy\_64} & 4,999 & $0.011 \pm 0.000$ & 0.03 & 0.000 & 0.00 & 0.268 \\
+\texttt{bulk\_copy\_4K} & 263,047 & $0.011 \pm 0.000$ & 0.03 & 0.000 & 0.00 & 3.292 \\
+\texttt{bulk\_copy\_256K} & 16,778,119 & $0.015 \pm 0.000$ & 0.04 & 0.026 & 0.03 & 270.383 \\
+\texttt{bulk\_copy\_4M} & 268,436,360 & $0.016 \pm 0.001$ & 0.04 & 0.027 & 0.06 & 7518.289 \\
+\texttt{bulk\_fill\_64} & 5,063 & $0.086 \pm 0.000$ & 0.24 & 0.000 & 0.00 & 0.529 \\
+\texttt{bulk\_fill\_4K} & 263,111 & $0.010 \pm 0.000$ & 0.03 & 0.000 & 0.00 & 2.812 \\
+\texttt{bulk\_fill\_256K} & 16,778,183 & $0.013 \pm 0.001$ & 0.04 & 0.000 & 0.00 & 224.685 \\
+\texttt{bulk\_fill\_4M} & 268,436,424 & $0.012 \pm 0.001$ & 0.03 & 0.000 & 0.00 & 3375.201 \\
+\bottomrule
+\end{tabular}%
+\end{adjustbox}
+\end{table}

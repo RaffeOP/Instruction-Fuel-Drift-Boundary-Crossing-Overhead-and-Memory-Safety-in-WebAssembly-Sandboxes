@@ -36,7 +36,7 @@ static int pb_fprintf(FILE *stream, const char *format, ...) {
 }
 
 #define fprintf pb_fprintf
-#include "/Users/raffe/Downloads/R3/kernels/polybench/linear-algebra/solvers/durbin/durbin.c"
+#include "../../polybench/linear-algebra/solvers/durbin/durbin.c"
 
 __attribute__((export_name("run")))
 long long run(int reps) {
